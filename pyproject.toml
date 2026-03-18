@@ -1,0 +1,21 @@
+[project]
+name = "rocrate-toolkits"
+version = "0.0.0"
+description = "HDR RO-Crate Toolkits"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests==2.32.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[project.scripts]
+rocrate-to-tes = "toolkits.scripts.rocrate_to_tes:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
