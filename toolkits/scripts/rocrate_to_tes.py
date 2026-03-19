@@ -3,6 +3,7 @@ import json
 import sys
 
 from toolkits.clients.tes_client import load_rocrate_metadata, extract_tes_message
+from toolkits.clients.validation_client import validate_rocrate_metadata
 
 
 def parse_args(argv=None):
@@ -33,10 +34,16 @@ def main(argv=None):
 
     try:
         crate_metadata = load_rocrate_metadata(args.input_path)
+        result = validate_rocrate_metadata(json.dumps(crate_metadata)).get("result", None)
+        result_json = json.loads(result)
+        passed = result_json.get("passed", False)
+        print(f"Validation passed: {passed}")
         tes_message = extract_tes_message(crate_metadata)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
+    
+    
 
     json.dump(tes_message, sys.stdout, indent=2)
     sys.stdout.write("\n")
