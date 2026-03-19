@@ -29,7 +29,11 @@ python3 -m venv <virtual_environment_name>
 python -m pip install -e .
 ```
 
-### 3. Run the tools
+### 3. Configure .env
+
+Make a copy of `env.template`, rename it to `.env` and populate the variables.
+
+### 4. Run the tools
 
 ```
 rocrate-to-tes ro-crate-metadata.json
