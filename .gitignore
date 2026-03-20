@@ -1,4 +1,7 @@
 venv/
+.venv/
+env/
+hdr-ro-crate-toolkits/
 *.egg-info/
 __pycache__/
 *.pyc
