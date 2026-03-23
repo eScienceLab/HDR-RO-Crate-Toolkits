@@ -18,7 +18,7 @@ Install the project in a virtual environment.
 ```
 python3 -m venv <virtual_environment_name>
 source <virtual_environment_name>/bin/activate
-python -m pip install -e
+python -m pip install -e .
 ```
 
 #### Windows
@@ -26,7 +26,7 @@ python -m pip install -e
 ```
 python3 -m venv <virtual_environment_name>
 <virtual_environment_name>\Scripts\activate
-python -m pip install -e
+python -m pip install -e .
 ```
 
 This installs:
