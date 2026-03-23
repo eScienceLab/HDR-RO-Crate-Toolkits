@@ -6,16 +6,19 @@ from zipfile import ZipFile
 
 import pytest
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from toolkits.scripts.rocrate_to_tes import (
-    ROCRATE_METADATA_FILENAME,
+from toolkits.config.settings import ROCRATE_METADATA_FILENAME
+
+from toolkits.clients.tes_client import (
+    load_rocrate_metadata,
     extract_tes_message,
     is_tes_payload,
-    load_rocrate_metadata,
-    main,
     resolve_metadata_path,
 )
+
+from toolkits.scripts.rocrate_to_tes import main
 
 
 FIXTURE_PATH = (
