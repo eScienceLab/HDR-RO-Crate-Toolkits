@@ -18,7 +18,7 @@ Install the project in a virtual environment.
 ```
 python3 -m venv <virtual_environment_name>
 source <virtual_environment_name>/bin/activate
-python -m pip install -e ".[dev]"
+python -m pip install -e
 ```
 
 #### Windows
@@ -26,13 +26,19 @@ python -m pip install -e ".[dev]"
 ```
 python3 -m venv <virtual_environment_name>
 <virtual_environment_name>\Scripts\activate
-python -m pip install -e ".[dev]"
+python -m pip install -e
 ```
 
 This installs:
 - the package itself
 - the `rocrate-to-tes` CLI
 - the development dependency `pytest`
+
+
+**NOTE:** For development work you may want to run
+```python -m pip install -e ".[dev]"
+```
+instead, which also installs the development dependency `pytest`.
 
 ### 3. Run the tests
 
