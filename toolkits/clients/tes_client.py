@@ -2,7 +2,10 @@ import json
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
-from toolkits.config.settings import ROCRATE_METADATA_FILENAME
+from toolkits.config.settings import (
+    ROCRATE_METADATA_FILENAME,
+    TES_TASK_SCHEMA_ID,
+)
 
 
 def is_valid_executor(executor):
@@ -41,48 +44,84 @@ def is_tes_payload(payload):
     )
 
 
+def conforms_to_tes_task_schema(entity):
+    """Return True when an RO-Crate entity declares the TES task schema."""
+
+    conforms_to = entity.get("conformsTo")
+    if isinstance(conforms_to, str):
+        return conforms_to == TES_TASK_SCHEMA_ID
+    if isinstance(conforms_to, dict):
+        return conforms_to.get("@id") == TES_TASK_SCHEMA_ID
+    if isinstance(conforms_to, list):
+        return any(
+            (
+                isinstance(item, str) and item == TES_TASK_SCHEMA_ID
+            )
+            or (
+                isinstance(item, dict) and item.get("@id") == TES_TASK_SCHEMA_ID
+            )
+            for item in conforms_to
+        )
+    return False
+
+
+def is_creative_work(entity):
+    """Return True when the entity type includes `CreativeWork`."""
+
+    entity_type = entity.get("@type")
+    if isinstance(entity_type, str):
+        return entity_type == "CreativeWork"
+    if isinstance(entity_type, list):
+        return "CreativeWork" in entity_type
+    return False
+
+
+def is_tes_message_entity(entity):
+    """Return True when the entity matches the TES message metadata shape."""
+
+    return (
+        isinstance(entity, dict)
+        and is_creative_work(entity)
+        and conforms_to_tes_task_schema(entity)
+        and entity.get("encodingFormat") == "application/json"
+        and isinstance(entity.get("text"), str)
+    )
+
+
 def extract_tes_message(crate_metadata):
     """Extract the unique TES message embedded in RO-Crate metadata.
 
-    The function scans the RO-Crate `@graph` for `CreativeWork` entities whose
-    `text` property contains stringified JSON. Parsed payloads are treated as
-    TES candidates only if they satisfy `is_tes_payload`.
+    The function scans the RO-Crate `@graph` for a single `CreativeWork`
+    entity whose `conformsTo` property points to the TES task schema, whose
+    `encodingFormat` is `application/json`, and whose `text` property is a
+    string containing a TES task payload.
 
     Raises:
-        ValueError: if `@graph` is missing or invalid, if no TES payload is
-            found, or if more than one TES candidate is present.
+        ValueError: if `@graph` is missing or invalid, if no TES metadata
+            candidate is found, if more than one candidate is present, or if
+            the TES content is not valid.
     """
 
     graph = crate_metadata.get("@graph")
     if not isinstance(graph, list):
         raise ValueError("RO-Crate metadata must contain an '@graph' array.")
 
-    matches = []
-
-    for entity in graph:
-        if not isinstance(entity, dict):
-            continue
-        if entity.get("@type") != "CreativeWork":
-            continue
-
-        text = entity.get("text")
-        if not isinstance(text, str):
-            continue
-
-        try:
-            payload = json.loads(text)
-        except json.JSONDecodeError:
-            continue
-
-        if is_tes_payload(payload):
-            matches.append(payload)
+    matches = [entity for entity in graph if is_tes_message_entity(entity)]
 
     if not matches:
         raise ValueError("No TES message found in RO-Crate metadata.")
     if len(matches) > 1:
         raise ValueError("Multiple TES message candidates found in RO-Crate metadata.")
 
-    return matches[0]
+    try:
+        payload = json.loads(matches[0]["text"])
+    except json.JSONDecodeError as exc:
+        raise ValueError("TES message content is not valid JSON.") from exc
+
+    if not is_tes_payload(payload):
+        raise ValueError("TES message content is not a valid TES payload.")
+
+    return payload
 
 
 def resolve_metadata_path(input_path):

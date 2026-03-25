@@ -410,6 +410,10 @@
         {
             "@id": "#tes-task-1",
             "@type": "CreativeWork",
+            "conformsTo": {
+                "@id": "https://ga4gh.github.io/task-execution-schemas/openapi/task_execution_service.openapi.yaml#/components/schemas/tesTask"
+            },
+            "encodingFormat": "application/json",
             "text": "{ \"name\": \"Hello world\", \"inputs\": [ { \"url\": \"s3://funnel-bucket/hello.txt\", \"path\": \"/inputs/hello.txt\" } ], \"outputs\": [ { \"url\": \"s3://funnel-bucket/output.txt\", \"path\": \"/outputs/stdout\" } ], \"executors\": [ { \"image\": \"alpine\", \"command\": [ \"cat\", \"/inputs/hello.txt\" ], \"stdout\": \"/outputs/stdout\" } ] }"
         }
     ]
