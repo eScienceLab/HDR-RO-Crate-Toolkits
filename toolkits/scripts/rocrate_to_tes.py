@@ -1,7 +1,7 @@
 import argparse
 import json
 
-from toolkits.clients.validation_client import validate_rocrate_metadata
+from toolkits.services.validation_service import is_rocrate_metadata_valid
 
 def main():
     parser = argparse.ArgumentParser()
@@ -11,10 +11,7 @@ def main():
     with open(args.file_path, "r") as f:
         data = json.dumps(json.load(f))
 
-    result = validate_rocrate_metadata(data).get("result", None)
-    result_json = json.loads(result)
-    passed = result_json.get("passed", False)
-    print(f"Validation passed: {passed}")
+    print(f"Validation passed: {is_rocrate_metadata_valid(data)}")
 
 if __name__ == "__main__":
     main()
