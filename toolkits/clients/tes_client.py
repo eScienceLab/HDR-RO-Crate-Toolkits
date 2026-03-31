@@ -1,12 +1,30 @@
 import json
+import requests
+
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
+from urllib.parse import urljoin
 
 from toolkits.config.settings import (
+    TASK_SERVICE_API_URL,
+    TASK_SUBMISSION_API_TOKEN,
     ROCRATE_METADATA_FILENAME,
     TES_TASK_SCHEMA_ID,
 )
 
+
+def create_tes_task(data):
+    """Send payload to the 5S-TES submission API and return the response."""
+
+    url = urljoin(TASK_SERVICE_API_URL, "v1/tasks")
+    headers = {
+        "accept": "application/json",
+        "Content-Type": "application/json-patch+json",
+        "Authorization": "Bearer " + TASK_SUBMISSION_API_TOKEN
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    response.raise_for_status()
+    return response.json()
 
 def is_valid_executor(executor):
     """Return True when `executor` matches the minimal TES executor shape.
