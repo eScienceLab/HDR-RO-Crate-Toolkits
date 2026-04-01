@@ -40,13 +40,17 @@ This installs:
 ```
 instead, which also installs the development dependency `pytest`.
 
-### 3. Run the tests
+### 3. Configure .env
+
+Make a copy of `env.template`, rename it to `.env` and populate the variables.
+
+### 4. Run the tests
 
 ```
 pytest -q
 ```
 
-### 4. Run the tool
+### 5. Run the tool
 
 The `rocrate-to-tes` command accepts:
 - a path to `ro-crate-metadata.json`
