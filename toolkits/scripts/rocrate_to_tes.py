@@ -34,7 +34,7 @@ def main(argv=None):
 
     try:
         crate_metadata = load_rocrate_metadata(args.input_path)
-        print(f"Validation passed: {is_rocrate_metadata_valid(json.dumps(crate_metadata))}")
+        metadata_valid = is_rocrate_metadata_valid(crate_metadata)
         tes_message = extract_tes_message(crate_metadata)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
@@ -42,6 +42,7 @@ def main(argv=None):
     
     
 
+    sys.stdout.write(f"Validation passed: {metadata_valid}\n")
     json.dump(tes_message, sys.stdout, indent=2)
     sys.stdout.write("\n")
     return 0
