@@ -13,8 +13,27 @@ from toolkits.config.settings import (
 )
 
 
-def create_tes_task(data):
-    """Send payload to the 5S-TES submission API and return the response."""
+def create_tes_task(tes_message: dict) -> dict:
+    """Create a task by sending the TES message to the 5S-TES submission API.
+    
+    This function sends a TES message to the 5S-TES submission API endpoint 
+    via HTTP POST request. Successful responses are expected to contain a 
+    JSON body, which is returned as a dictionary.
+
+    Args:
+        tes_message (dict)
+
+    Returns:
+        The parsed JSON response from the API.
+
+    Raises:
+        TypeError: If `tes_message` is not a dictionary.
+        requests.exceptions.RequestException: If the request failed.
+        ValueError: If the response body cannot be decoded as JSON.
+    """
+
+    if not isinstance(tes_message, dict):
+        raise TypeError("tes_message must be a dictionary")
 
     url = urljoin(TASK_SERVICE_API_URL, "v1/tasks")
     headers = {
@@ -22,7 +41,7 @@ def create_tes_task(data):
         "Content-Type": "application/json-patch+json",
         "Authorization": "Bearer " + TASK_SUBMISSION_API_TOKEN
     }
-    response = requests.post(url, headers=headers, data=json.dumps(data))
+    response = requests.post(url, headers=headers, data=json.dumps(tes_message))
     response.raise_for_status()
     return response.json()
 
