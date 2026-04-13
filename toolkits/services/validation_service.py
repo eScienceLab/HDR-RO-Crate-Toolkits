@@ -1,10 +1,9 @@
 import json
 
-from typing import Dict
 from toolkits.clients.validation_client import validate_rocrate_metadata
 
 
-def is_rocrate_metadata_valid(crate_metadata: Dict) -> bool:
+def is_rocrate_metadata_valid(crate_metadata: dict) -> bool:
     """Return True when the data is valid RO-Crate metadata.
     
     This function serialises the RO-Crate metadata into JSON formatted string,
@@ -12,7 +11,7 @@ def is_rocrate_metadata_valid(crate_metadata: Dict) -> bool:
     to return True or False.
 
     Args:
-        crate_metadata (Dict): The RO-Crate metadata to validate.
+        crate_metadata (dict): The RO-Crate metadata to validate.
 
     Returns:
         True if `passed` key exists and is True, else False.
