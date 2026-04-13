@@ -38,12 +38,13 @@ def test_extract_tes_message_from_fixture():
 
     tes_message = extract_tes_message(crate_metadata)
 
-    assert tes_message["name"] == "Hello world"
+    assert tes_message["name"] == "Hello World"
     assert tes_message["executors"] == [
         {
-            "image": "alpine",
-            "command": ["cat", "/inputs/hello.txt"],
-            "stdout": "/outputs/stdout",
+            "image": "ubuntu", 
+            "command": ["echo", "Hello World"],
+            "workdir": "/outputs",
+            "stdout": "/outputs/stdout"
         }
     ]
 
