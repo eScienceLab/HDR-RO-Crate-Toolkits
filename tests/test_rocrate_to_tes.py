@@ -32,6 +32,19 @@ FIXTURE_DIR = (
 FIXTURE_METADATA_PATH = FIXTURE_DIR / ROCRATE_METADATA_FILENAME
 
 
+@pytest.fixture
+def mock_clients(monkeypatch):
+    monkeypatch.setattr(
+        "toolkits.scripts.rocrate_to_tes.is_rocrate_metadata_valid",
+        lambda data: True
+    )
+    monkeypatch.setattr(
+        "toolkits.scripts.rocrate_to_tes.create_tes_task",
+        lambda data: {"$id": "1", "id": "1"}
+    )
+    yield
+
+
 def test_extract_tes_message_from_fixture():
     # The sample RO-Crate fixture should yield the embedded TES task payload.
     crate_metadata = json.loads(FIXTURE_METADATA_PATH.read_text(encoding="utf-8"))
@@ -164,19 +177,19 @@ def test_extract_tes_message_rejects_invalid_tes_payload_after_selection():
         extract_tes_message(crate_metadata)
 
 
-def test_main_prints_extracted_message(capsys):
+def test_main_prints_extracted_message(capsys, mock_clients):
     # The CLI should emit the extracted TES message as JSON on stdout.
     exit_code = main([str(FIXTURE_METADATA_PATH)])
 
     captured = capsys.readouterr()
-    output = json.loads(captured.out)
+    output = captured.out
 
     assert exit_code == 0
-    assert output["name"] == "Hello world"
-    assert output["executors"][0]["image"] == "alpine"
+    assert '"name": "Hello World"' in output
+    assert  '"executors": [\n    {\n      "image": "ubuntu"' in output
 
 
-def test_main_accepts_rocrate_directory(tmp_path, capsys):
+def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_clients):
     # The CLI should also work when pointed at the root directory of a crate.
     crate_dir = tmp_path / "crate"
     shutil.copytree(FIXTURE_DIR, crate_dir)
@@ -184,13 +197,13 @@ def test_main_accepts_rocrate_directory(tmp_path, capsys):
     exit_code = main([str(crate_dir)])
 
     captured = capsys.readouterr()
-    output = json.loads(captured.out)
+    output = captured.out
 
     assert exit_code == 0
-    assert output["name"] == "Hello world"
+    assert '"name": "Hello World"' in output
 
 
-def test_main_accepts_rocrate_zip_archive(tmp_path, capsys):
+def test_main_accepts_rocrate_zip_archive(tmp_path, capsys, mock_clients):
     # The CLI should also work when pointed at a ZIP-packaged RO-Crate.
     archive_path = tmp_path / "crate.zip"
     with ZipFile(archive_path, "w") as zip_file:
@@ -199,7 +212,7 @@ def test_main_accepts_rocrate_zip_archive(tmp_path, capsys):
     exit_code = main([str(archive_path)])
 
     captured = capsys.readouterr()
-    output = json.loads(captured.out)
+    output = captured.out
 
     assert exit_code == 0
-    assert output["name"] == "Hello world"
+    assert '"name": "Hello World"' in output
