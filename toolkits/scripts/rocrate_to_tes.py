@@ -34,7 +34,7 @@ def main(argv=None):
 
     try:
         crate_metadata = load_rocrate_metadata(args.input_path)
-        metadata_valid = is_rocrate_metadata_valid(json.dumps(crate_metadata))
+        metadata_valid = is_rocrate_metadata_valid(crate_metadata)
         tes_message = extract_tes_message(crate_metadata)
         tes_response_json = create_tes_task(tes_message)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
