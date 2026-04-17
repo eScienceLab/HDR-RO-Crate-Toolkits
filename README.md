@@ -36,7 +36,8 @@ This installs:
 
 
 **NOTE:** For development work you may want to run
-```python -m pip install -e ".[dev]"
+```
+python -m pip install -e ".[dev]"
 ```
 instead, which also installs the development dependency `pytest`.
 
