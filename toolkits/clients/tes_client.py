@@ -6,8 +6,8 @@ from zipfile import BadZipFile, ZipFile
 from urllib.parse import urljoin
 
 from toolkits.config.settings import (
-    TASK_SERVICE_API_URL,
-    TASK_SUBMISSION_API_TOKEN,
+    TES_SUBMISSION_API_URL,
+    TES_SUBMISSION_API_TOKEN,
     ROCRATE_METADATA_FILENAME,
     TES_TASK_SCHEMA_ID,
 )
@@ -35,11 +35,11 @@ def create_tes_task(tes_message: dict) -> dict:
     if not isinstance(tes_message, dict):
         raise TypeError("tes_message must be a dictionary")
 
-    url = urljoin(TASK_SERVICE_API_URL, "v1/tasks")
+    url = urljoin(TES_SUBMISSION_API_URL, "v1/tasks")
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json-patch+json",
-        "Authorization": f"Bearer {TASK_SUBMISSION_API_TOKEN}"
+        "Authorization": f"Bearer {TES_SUBMISSION_API_TOKEN}"
     }
     response = requests.post(url, headers=headers, data=json.dumps(tes_message))
     response.raise_for_status()

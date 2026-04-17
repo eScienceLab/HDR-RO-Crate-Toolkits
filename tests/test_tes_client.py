@@ -20,11 +20,11 @@ def test_create_tes_task(mock_post):
     response_json = create_tes_task(TES_MSG_DICT)
 
     # requests.post should be called with the following
-    url = os.environ["TASK_SERVICE_API_URL"] + "/v1/tasks"
+    url = os.environ["TES_SUBMISSION_API_URL"] + "/v1/tasks"
     headers = {
         "accept": "application/json", 
         "Content-Type": "application/json-patch+json", 
-        "Authorization": "Bearer " + os.environ["TASK_SUBMISSION_API_TOKEN"]
+        "Authorization": "Bearer " + os.environ["TES_SUBMISSION_API_TOKEN"]
     }
     payload = json.dumps(TES_MSG_DICT)
 
