@@ -1,12 +1,49 @@
 import json
+import requests
+
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
+from urllib.parse import urljoin
 
 from toolkits.config.settings import (
+    TES_SUBMISSION_API_URL,
+    TES_SUBMISSION_API_TOKEN,
     ROCRATE_METADATA_FILENAME,
     TES_TASK_SCHEMA_ID,
 )
 
+
+def create_tes_task(tes_message: dict) -> dict:
+    """Create a task by sending the TES message to the 5S-TES submission API.
+    
+    This function sends a TES message to the 5S-TES submission API endpoint 
+    via HTTP POST request. Successful responses are expected to contain a 
+    JSON body, which is returned as a dictionary.
+
+    Args:
+        tes_message (dict)
+
+    Returns:
+        The parsed JSON response from the API.
+
+    Raises:
+        TypeError: If `tes_message` is not a dictionary.
+        requests.exceptions.RequestException: If the request failed.
+        ValueError: If the response body cannot be decoded as JSON.
+    """
+
+    if not isinstance(tes_message, dict):
+        raise TypeError("tes_message must be a dictionary")
+
+    url = urljoin(TES_SUBMISSION_API_URL, "v1/tasks")
+    headers = {
+        "accept": "application/json",
+        "Content-Type": "application/json-patch+json",
+        "Authorization": f"Bearer {TES_SUBMISSION_API_TOKEN}"
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(tes_message))
+    response.raise_for_status()
+    return response.json()
 
 def is_valid_executor(executor):
     """Return True when `executor` matches the minimal TES executor shape.
