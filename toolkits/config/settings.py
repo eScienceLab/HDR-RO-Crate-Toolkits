@@ -4,7 +4,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CRATEY_VALIDATOR_API_URL = os.getenv("CRATEY_VALIDATOR_API_URL")
+def _get_required_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
+
+CRATEY_VALIDATOR_API_URL = _get_required_env("CRATEY_VALIDATOR_API_URL")
+TES_SUBMISSION_API_URL = _get_required_env("TES_SUBMISSION_API_URL")
+TES_SUBMISSION_API_TOKEN = _get_required_env("TES_SUBMISSION_API_TOKEN")
 
 ROCRATE_METADATA_FILENAME = "ro-crate-metadata.json"
 
