@@ -39,7 +39,7 @@ def create_tes_task(tes_message: dict) -> dict:
     headers = {
         "accept": "application/json",
         "Content-Type": "application/json-patch+json",
-        "Authorization": "Bearer " + TASK_SUBMISSION_API_TOKEN
+        "Authorization": f"Bearer {TASK_SUBMISSION_API_TOKEN}"
     }
     response = requests.post(url, headers=headers, data=json.dumps(tes_message))
     response.raise_for_status()
