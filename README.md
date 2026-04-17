@@ -74,3 +74,10 @@ rocrate-to-tes /path/to/ro-crate-metadata.json
 rocrate-to-tes /path/to/ro-crate-directory
 rocrate-to-tes /path/to/ro-crate.zip
 ```
+
+### 6. Expected Output
+
+If the tool runs successfully it should print the following information to the terminal:
+- 'Validation passed' status, either True or False
+- The TES message, as formatted JSON
+- The 5S-TES response message, as formatted JSON, which contains the project and task ID's.
