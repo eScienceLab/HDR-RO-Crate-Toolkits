@@ -113,6 +113,17 @@ def is_creative_work(entity):
     return False
 
 
+def is_file_type(entity):
+    """Return True when the entity type includes `File`."""
+
+    entity_type = entity.get("@type")
+    if isinstance(entity_type, str):
+        return entity_type == "File"
+    if isinstance(entity_type, list):
+        return "File" in entity_type
+    return False
+
+
 def is_tes_message_entity(entity):
     """Return True when the entity matches the TES message metadata shape."""
 
@@ -122,16 +133,56 @@ def is_tes_message_entity(entity):
         and conforms_to_tes_task_schema(entity)
         and entity.get("encodingFormat") == "application/json"
         and isinstance(entity.get("text"), str)
+    ) or (
+        isinstance(entity, dict)
+        and is_file_type(entity)
+        and conforms_to_tes_task_schema(entity)
+        and entity.get("encodingFormat") == "application/json"
+        and not Path(str(entity.get("@id"))).is_absolute() # TODO: Support Web-based Data Entities
     )
 
 
-def extract_tes_message(crate_metadata):
+def load_tes_message(input_path, tes_msg_filename):
+    """Load TES message JSON"""
+
+    # TODO: Support Web-based Data Entities
+    path = Path(input_path)
+    if not path.exists():
+        raise ValueError(f"Input path does not exist: {path}")
+
+    if path.is_file() and path.suffix.lower() == ".zip":
+        try:
+            with ZipFile(path) as zip_file:
+                with zip_file.open(tes_msg_filename) as handle:
+                    return json.load(handle)
+        except KeyError as exc:
+            raise ValueError(
+                f"TES message file not found in archive: {path}"
+            ) from exc
+        except BadZipFile as exc:
+            raise ValueError(f"Invalid ZIP archive: {path}") from exc
+
+    if path.is_dir():
+        tes_msg_path = path / tes_msg_filename
+        if not tes_msg_path.is_file():
+            raise ValueError(f"TES message file not found at: {tes_msg_path}")
+    elif path.is_file():
+        tes_msg_path = path.parent / tes_msg_filename
+    else:
+        raise ValueError(f"RO-Crate metadata file is not a file or directory: {path}")
+
+    with tes_msg_path.open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+def extract_or_load_tes_message(crate_metadata, input_path):
     """Extract the unique TES message embedded in RO-Crate metadata.
 
-    The function scans the RO-Crate `@graph` for a single `CreativeWork`
-    entity whose `conformsTo` property points to the TES task schema, whose
+    The function scans the RO-Crate `@graph` for a single entity whose 
+    `conformsTo` property points to the TES task schema, whose
     `encodingFormat` is `application/json`, and whose `text` property is a
-    string containing a TES task payload.
+    string containing a TES task payload if it is a `CreativeWork` entity
+    or whose `@id` property is a URI to the file if it is a `File` entity.
 
     Raises:
         ValueError: if `@graph` is missing or invalid, if no TES metadata
@@ -151,7 +202,10 @@ def extract_tes_message(crate_metadata):
         raise ValueError("Multiple TES message candidates found in RO-Crate metadata.")
 
     try:
-        payload = json.loads(matches[0]["text"])
+        if matches[0]["@type"] == "File":
+            payload = load_tes_message(input_path, matches[0]["@id"])
+        else:
+            payload = json.loads(matches[0]["text"])
     except json.JSONDecodeError as exc:
         raise ValueError("TES message content is not valid JSON.") from exc
 

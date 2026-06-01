@@ -15,7 +15,7 @@ from toolkits.clients.tes_client import (
     conforms_to_tes_task_schema,
     is_tes_message_entity,
     load_rocrate_metadata,
-    extract_tes_message,
+    extract_or_load_tes_message,
     is_tes_payload,
     resolve_metadata_path,
 )
@@ -45,11 +45,11 @@ def mock_clients(monkeypatch):
     yield
 
 
-def test_extract_tes_message_from_fixture():
+def test_extract_or_load_tes_message_from_fixture():
     # The sample RO-Crate fixture should yield the embedded TES task payload.
     crate_metadata = json.loads(FIXTURE_METADATA_PATH.read_text(encoding="utf-8"))
 
-    tes_message = extract_tes_message(crate_metadata)
+    tes_message = extract_or_load_tes_message(crate_metadata, FIXTURE_METADATA_PATH)
 
     assert tes_message["name"] == "Hello World"
     assert tes_message["executors"] == [
@@ -112,7 +112,7 @@ def test_is_tes_message_entity_requires_all_metadata_fields():
     assert is_tes_message_entity(entity) is True
     assert is_tes_message_entity({**entity, "encodingFormat": "text/plain"}) is False
     assert is_tes_message_entity({**entity, "text": {"not": "a string"}}) is False
-    assert is_tes_message_entity({**entity, "@type": "File"}) is False
+    assert is_tes_message_entity({**entity, "@type": "InvalidType"}) is False
 
 
 def test_is_tes_payload_rejects_single_executor_object():
@@ -127,7 +127,7 @@ def test_is_tes_payload_rejects_single_executor_object():
     assert is_tes_payload(payload) is False
 
 
-def test_extract_tes_message_ignores_json_without_tes_conforms_to():
+def test_extract_or_load_tes_message_ignores_json_without_tes_conforms_to():
     # JSON text alone must not be mistaken for a TES payload.
     crate_metadata = {
         "@graph": [
@@ -140,10 +140,10 @@ def test_extract_tes_message_ignores_json_without_tes_conforms_to():
     }
 
     with pytest.raises(ValueError, match="No TES message found"):
-        extract_tes_message(crate_metadata)
+        extract_or_load_tes_message(crate_metadata, "")
 
 
-def test_extract_tes_message_ignores_invalid_json_for_tes_conforms_to():
+def test_extract_or_load_tes_message_ignores_invalid_json_for_tes_conforms_to():
     crate_metadata = {
         "@graph": [
             {
@@ -157,10 +157,10 @@ def test_extract_tes_message_ignores_invalid_json_for_tes_conforms_to():
     }
 
     with pytest.raises(ValueError, match="not valid JSON"):
-        extract_tes_message(crate_metadata)
+        extract_or_load_tes_message(crate_metadata, "")
 
 
-def test_extract_tes_message_rejects_invalid_tes_payload_after_selection():
+def test_extract_or_load_tes_message_rejects_invalid_tes_payload_after_selection():
     crate_metadata = {
         "@graph": [
             {
@@ -174,7 +174,7 @@ def test_extract_tes_message_rejects_invalid_tes_payload_after_selection():
     }
 
     with pytest.raises(ValueError, match="not a valid TES payload"):
-        extract_tes_message(crate_metadata)
+        extract_or_load_tes_message(crate_metadata, "")
 
 
 def test_main_prints_extracted_message(capsys, mock_clients):

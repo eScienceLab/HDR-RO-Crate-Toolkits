@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from toolkits.clients.tes_client import create_tes_task, load_rocrate_metadata, extract_tes_message
+from toolkits.clients.tes_client import create_tes_task, load_rocrate_metadata, extract_or_load_tes_message
 from toolkits.services.validation_service import is_rocrate_metadata_valid
 
 
@@ -35,7 +35,7 @@ def main(argv=None):
     try:
         crate_metadata = load_rocrate_metadata(args.input_path)
         metadata_valid = is_rocrate_metadata_valid(crate_metadata)
-        tes_message = extract_tes_message(crate_metadata)
+        tes_message = extract_or_load_tes_message(crate_metadata, args.input_path)
         tes_response_json = create_tes_task(tes_message)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
