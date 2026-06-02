@@ -3,7 +3,9 @@ import requests
 
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
+from urllib.request import urlopen
+from urllib.error import URLError, HTTPError
 
 from toolkits.config.settings import (
     TES_SUBMISSION_API_URL,
@@ -138,14 +140,23 @@ def is_tes_message_entity(entity):
         and is_file_type(entity)
         and conforms_to_tes_task_schema(entity)
         and entity.get("encodingFormat") == "application/json"
-        and not Path(str(entity.get("@id"))).is_absolute() # TODO: Support Web-based Data Entities
+        and (
+            not Path(str(entity.get("@id"))).is_absolute()
+            or urlparse(str(entity.get("@id"))).scheme in {"http", "https"}
+        )
     )
 
 
 def load_tes_message(input_path, tes_msg_filename):
     """Load TES message JSON"""
 
-    # TODO: Support Web-based Data Entities
+    if urlparse(tes_msg_filename).scheme in {"http", "https"}:
+        try:
+            with urlopen(tes_msg_filename) as response:
+                return json.load(response)
+        except (HTTPError, URLError) as e:
+            raise ValueError(f"Unable to load TES message file from: {tes_msg_filename}")
+
     path = Path(input_path)
     if not path.exists():
         raise ValueError(f"Input path does not exist: {path}")
