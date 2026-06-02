@@ -23,13 +23,11 @@ from toolkits.clients.tes_client import (
 from toolkits.scripts.rocrate_to_tes import main
 
 
-FIXTURE_DIR = (
-    Path(__file__).parent
-    / "data"
-    / "ro-crate_metadata_plus_tes"
-    / "five_safes_crate_result"
-)
-FIXTURE_METADATA_PATH = FIXTURE_DIR / ROCRATE_METADATA_FILENAME
+FIXTURE_DIRS = [
+    Path(__file__).parent / "data" / "ro-crate_metadata_plus_tes" / "five_safes_crate_result",
+    Path(__file__).parent / "data" / "ro-crate_metadata_plus_file_tes" / "five_safes_crate_result",
+]
+FIXTURE_METADATA_PATHS = [dir / ROCRATE_METADATA_FILENAME for dir in FIXTURE_DIRS]
 
 
 @pytest.fixture
@@ -45,11 +43,12 @@ def mock_clients(monkeypatch):
     yield
 
 
-def test_extract_or_load_tes_message_from_fixture():
+@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS)
+def test_extract_or_load_tes_message_from_fixture(metadata_path):
     # The sample RO-Crate fixture should yield the embedded TES task payload.
-    crate_metadata = json.loads(FIXTURE_METADATA_PATH.read_text(encoding="utf-8"))
+    crate_metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
 
-    tes_message = extract_or_load_tes_message(crate_metadata, FIXTURE_METADATA_PATH)
+    tes_message = extract_or_load_tes_message(crate_metadata, metadata_path)
 
     assert tes_message["name"] == "Hello World"
     assert tes_message["executors"] == [
@@ -62,30 +61,33 @@ def test_extract_or_load_tes_message_from_fixture():
     ]
 
 
-def test_resolve_metadata_path_accepts_rocrate_directory(tmp_path):
+@pytest.mark.parametrize("dir", FIXTURE_DIRS)
+def test_resolve_metadata_path_accepts_rocrate_directory(tmp_path, dir):
     # A crate directory should resolve to its embedded metadata JSON file.
     crate_dir = tmp_path / "crate"
-    shutil.copytree(FIXTURE_DIR, crate_dir)
+    shutil.copytree(dir, crate_dir)
     metadata_path = crate_dir / ROCRATE_METADATA_FILENAME
 
     assert resolve_metadata_path(crate_dir) == metadata_path
 
 
-def test_load_rocrate_metadata_from_rocrate_directory(tmp_path):
+@pytest.mark.parametrize("dir", FIXTURE_DIRS)
+def test_load_rocrate_metadata_from_rocrate_directory(tmp_path, dir):
     # Metadata loading should work when the input is the crate root directory.
     crate_dir = tmp_path / "crate"
-    shutil.copytree(FIXTURE_DIR, crate_dir)
+    shutil.copytree(dir, crate_dir)
 
     crate_metadata = load_rocrate_metadata(crate_dir)
 
     assert crate_metadata["@graph"][1]["name"] == "5-Safe RO-Crate Result"
 
 
-def test_load_rocrate_metadata_from_zip_archive(tmp_path):
+@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS)
+def test_load_rocrate_metadata_from_zip_archive(tmp_path, metadata_path):
     # Metadata loading should also work from a ZIP-packaged RO-Crate.
     archive_path = tmp_path / "crate.zip"
     with ZipFile(archive_path, "w") as zip_file:
-        zip_file.write(FIXTURE_METADATA_PATH, arcname=ROCRATE_METADATA_FILENAME)
+        zip_file.write(metadata_path, arcname=ROCRATE_METADATA_FILENAME)
 
     crate_metadata = load_rocrate_metadata(archive_path)
 
@@ -177,9 +179,10 @@ def test_extract_or_load_tes_message_rejects_invalid_tes_payload_after_selection
         extract_or_load_tes_message(crate_metadata, "")
 
 
-def test_main_prints_extracted_message(capsys, mock_clients):
+@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS)
+def test_main_prints_extracted_message(capsys, mock_clients, metadata_path):
     # The CLI should emit the extracted TES message as JSON on stdout.
-    exit_code = main([str(FIXTURE_METADATA_PATH)])
+    exit_code = main([str(metadata_path)])
 
     captured = capsys.readouterr()
     output = captured.out
@@ -189,10 +192,11 @@ def test_main_prints_extracted_message(capsys, mock_clients):
     assert  '"executors": [\n    {\n      "image": "ubuntu"' in output
 
 
-def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_clients):
+@pytest.mark.parametrize("dir", FIXTURE_DIRS)
+def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_clients, dir):
     # The CLI should also work when pointed at the root directory of a crate.
     crate_dir = tmp_path / "crate"
-    shutil.copytree(FIXTURE_DIR, crate_dir)
+    shutil.copytree(dir, crate_dir)
 
     exit_code = main([str(crate_dir)])
 
@@ -203,11 +207,14 @@ def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_clients):
     assert '"name": "Hello World"' in output
 
 
-def test_main_accepts_rocrate_zip_archive(tmp_path, capsys, mock_clients):
+@pytest.mark.parametrize("dir", FIXTURE_DIRS)
+def test_main_accepts_rocrate_zip_archive(tmp_path, capsys, mock_clients, dir):
     # The CLI should also work when pointed at a ZIP-packaged RO-Crate.
     archive_path = tmp_path / "crate.zip"
     with ZipFile(archive_path, "w") as zip_file:
-        zip_file.write(FIXTURE_METADATA_PATH, arcname=ROCRATE_METADATA_FILENAME)
+        for file in dir.rglob("*"):
+            if file.is_file():
+                zip_file.write(file, arcname=file.relative_to(dir))
 
     exit_code = main([str(archive_path)])
 
