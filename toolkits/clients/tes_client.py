@@ -213,7 +213,7 @@ def extract_or_load_tes_message(crate_metadata, input_path):
         raise ValueError("Multiple TES message candidates found in RO-Crate metadata.")
 
     try:
-        if matches[0]["@type"] == "File":
+        if is_file_type(matches[0]):
             payload = load_tes_message(input_path, matches[0]["@id"])
         else:
             payload = json.loads(matches[0]["text"])
