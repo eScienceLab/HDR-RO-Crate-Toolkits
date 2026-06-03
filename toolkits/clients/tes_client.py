@@ -180,7 +180,7 @@ def load_tes_message(input_path, tes_msg_filename):
     elif path.is_file():
         tes_msg_path = path.parent / tes_msg_filename
     else:
-        raise ValueError(f"RO-Crate metadata file is not a file or directory: {path}")
+        raise ValueError(f"Input path is not a file or directory: {path}")
 
     with tes_msg_path.open(encoding="utf-8") as f:
         return json.load(f)
