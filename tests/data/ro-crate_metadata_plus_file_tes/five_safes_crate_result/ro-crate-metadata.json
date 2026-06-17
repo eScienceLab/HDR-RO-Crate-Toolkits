@@ -35,6 +35,9 @@
                 },
                 {
                     "@id": "workflow/289/"
+                },
+                {
+                    "@id": "tes.json"
                 }
             ],
             "mainEntity": {
@@ -408,13 +411,12 @@
             "name": "sha-512 algorithm"
         },
         {
-            "@id": "#tes-task-1",
-            "@type": "CreativeWork",
+            "@id": "tes.json",
+            "@type": "File",
             "conformsTo": {
                 "@id": "https://ga4gh.github.io/task-execution-schemas/openapi/task_execution_service.openapi.yaml#/components/schemas/tesTask"
             },
-            "encodingFormat": "application/json",
-            "text": "{ \"state\": 0, \"name\": \"Hello World\", \"inputs\": [], \"outputs\": [ { \"name\": \"Stdout\", \"description\": \"Stdout results\", \"url\": \"s3://\", \"path\": \"/outputs\", \"type\": \"DIRECTORY\" } ], \"executors\": [ { \"image\": \"ubuntu\", \"command\": [\"echo\", \"Hello World\"], \"workdir\": \"/outputs\", \"stdout\": \"/outputs/stdout\" } ], \"volumes\": null, \"tags\": { \"project\": \"Testing\", \"tres\": \"DEMO\" }, \"logs\": null, \"creation_time\": null}"        
+            "encodingFormat": "application/json"
         }
     ]
 }
