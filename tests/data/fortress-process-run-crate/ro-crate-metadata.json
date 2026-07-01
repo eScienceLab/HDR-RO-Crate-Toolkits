@@ -1,0 +1,102 @@
+{
+    "@context": [
+        "https://w3id.org/ro/crate/1.1/context",
+        "https://w3id.org/ro/terms/workflow-run/context"
+    ],
+    "@graph": [
+        {
+            "@id": "ro-crate-metadata.json",
+            "@type": "CreativeWork",
+            "conformsTo": {
+                "@id": "https://w3id.org/ro/crate/1.1"
+            },
+            "about": {
+                "@id": "./"
+            }
+        },
+        {
+            "@id": "./",
+            "@type": "Dataset",
+            "name": "FORTRESS NW Wrapper TES submission",
+            "description": "Process Run RO-Crate describing a planned submission of the FORTRESS NW Wrapper through 5S-TES using an externally hosted Docker image and a TES task message.",
+            "license": "notspecified",
+            "datePublished": "2024-06-17T12:00:00+00:00",
+            "conformsTo": {
+                "@id": "https://w3id.org/ro/wfrun/process/0.5"
+            },
+            "hasPart": [
+                {
+                    "@id": "tes-message.json"
+                }
+            ],
+            "mentions": [
+                {
+                    "@id": "#fortress-tes-run"
+                },
+                {
+                    "@id": "#fortress-container-image"
+                }
+            ]
+        },
+        {
+            "@id": "https://w3id.org/ro/wfrun/process/0.5",
+            "@type": "CreativeWork",
+            "name": "Process Run Crate",
+            "version": "0.5"
+        },
+        {
+            "@id": "#fortress-nw-wrapper",
+            "@type": "SoftwareApplication",
+            "name": "FORTRESS NW Wrapper",
+            "description": "NWCyberComm wrapper application used as the FORTRESS demonstrator workload."
+        },
+        {
+            "@id": "#fortress-tes-run",
+            "@type": "CreateAction",
+            "name": "Submit FORTRESS NW Wrapper through 5S-TES",
+            "description": "Execute the FORTRESS NW Wrapper command through 5S-TES using the TES task request in tes-message.json and a Docker image retrieved from Harbor.",
+            "instrument": {
+                "@id": "#fortress-nw-wrapper"
+            },
+            "object": {
+                "@id": "tes-message.json"
+            },
+            "containerImage": {
+                "@id": "#fortress-container-image"
+            },
+            "actionStatus": "http://schema.org/PotentialActionStatus"
+        },
+        {
+            "@id": "tes-message.json",
+            "@type": "File",
+            "name": "TES task message for FORTRESS NW Wrapper submission",
+            "description": "TES task request containing the container image, command and configured output directory for the FORTRESS NW Wrapper submission.",
+            "encodingFormat": "application/json",
+            "conformsTo": {
+                "@id": "https://ga4gh.github.io/task-execution-schemas/openapi/task_execution_service.openapi.yaml#/components/schemas/tesTask"
+            },
+            "about": {
+                "@id": "#fortress-tes-run"
+            }
+        },
+        {
+            "@id": "#fortress-container-image",
+            "@type": "ContainerImage",
+            "additionalType": {
+                "@id": "https://w3id.org/ro/terms/workflow-run#DockerImage"
+            },
+            "registry": "10.99.53.84.sslip.io",
+            "name": "research-containers/fortress",
+            "tag": "main"
+        },
+        {
+            "@id": "https://ga4gh.github.io/task-execution-schemas/openapi/task_execution_service.openapi.yaml#/components/schemas/tesTask",
+            "@type": "CreativeWork",
+            "name": "GA4GH TES Task schema",
+            "version": "1.1.0",
+            "isPartOf": {
+                "@id": "https://ga4gh.github.io/task-execution-schemas/docs/"
+            }
+        }
+    ]
+}

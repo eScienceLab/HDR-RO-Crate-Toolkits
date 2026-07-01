@@ -1,0 +1,364 @@
+
+
+<html>
+<head>
+
+
+<script type="application/ld+json"> 
+  {
+  "@context": [
+    "https://w3id.org/ro/crate/1.1/context",
+    "https://w3id.org/ro/terms/workflow-run/context"
+  ],
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.1"
+      },
+      "about": {
+        "@id": "./"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "name": "FORTRESS NW Wrapper TES submission",
+      "description": "Process Run RO-Crate describing a planned submission of the FORTRESS NW Wrapper through 5S-TES using an externally hosted Docker image and a TES task message.",
+      "license": "notspecified",
+      "datePublished": "2024-06-17T12:00:00+00:00",
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/wfrun/process/0.5"
+      },
+      "hasPart": [
+        {
+          "@id": "tes-message.json"
+        }
+      ],
+      "mentions": [
+        {
+          "@id": "#fortress-tes-run"
+        },
+        {
+          "@id": "#fortress-container-image"
+        }
+      ]
+    },
+    {
+      "@id": "https://w3id.org/ro/wfrun/process/0.5",
+      "@type": "CreativeWork",
+      "name": "Process Run Crate",
+      "version": "0.5"
+    },
+    {
+      "@id": "tes-message.json",
+      "@type": "File",
+      "name": "TES task message for FORTRESS NW Wrapper submission",
+      "description": "TES task request containing the container image, command and configured output directory for the FORTRESS NW Wrapper submission.",
+      "encodingFormat": "application/json",
+      "conformsTo": {
+        "@id": "https://ga4gh.github.io/task-execution-schemas/openapi/task_execution_service.openapi.yaml#/components/schemas/tesTask"
+      },
+      "about": {
+        "@id": "#fortress-tes-run"
+      }
+    },
+    {
+      "@id": "#fortress-tes-run",
+      "@type": "CreateAction",
+      "name": "Submit FORTRESS NW Wrapper through 5S-TES",
+      "description": "Execute the FORTRESS NW Wrapper command through 5S-TES using the TES task request in tes-message.json and a Docker image retrieved from Harbor.",
+      "instrument": {
+        "@id": "#fortress-nw-wrapper"
+      },
+      "object": {
+        "@id": "tes-message.json"
+      },
+      "containerImage": {
+        "@id": "#fortress-container-image"
+      },
+      "actionStatus": "http://schema.org/PotentialActionStatus"
+    },
+    {
+      "@id": "#fortress-container-image",
+      "@type": "ContainerImage",
+      "additionalType": {
+        "@id": "https://w3id.org/ro/terms/workflow-run#DockerImage"
+      },
+      "registry": "10.99.53.84.sslip.io",
+      "name": "research-containers/fortress",
+      "tag": "main"
+    },
+    {
+      "@id": "#fortress-nw-wrapper",
+      "@type": "SoftwareApplication",
+      "name": "FORTRESS NW Wrapper",
+      "description": "NWCyberComm wrapper application used as the FORTRESS demonstrator workload."
+    },
+    {
+      "@id": "https://ga4gh.github.io/task-execution-schemas/openapi/task_execution_service.openapi.yaml#/components/schemas/tesTask",
+      "@type": "CreativeWork",
+      "name": "GA4GH TES Task schema",
+      "version": "1.1.0",
+      "isPartOf": {
+        "@id": "https://ga4gh.github.io/task-execution-schemas/docs/"
+      }
+    }
+  ]
+}
+</script>
+
+    
+<!-- script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script -->
+<script src="https://unpkg.com/ro-crate-html@0.1/dist/ro-crate-dynamic.min.js"></script>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<meta charset='utf-8'/>
+<style>
+
+table.table {
+  padding-bottom: 300px;
+}
+</style>
+</head>
+
+
+<body>
+
+  <nav class="navbar">
+
+    <ul class="nav navbar-nav" >
+        <li ><a href="#"><span class="glyphicon glyphicon-home dataset_name">&nbsp;FORTRESS NW Wrapper TES submission</span></a></li>
+    </ul>
+
+  </nav>
+<div class="container">
+<div class="jumbotron">
+<h4 class="citation"></h4>
+<h3 class="item_name">FORTRESS NW Wrapper TES submission</h3>
+
+
+<a href="./ro-crate-metadata.json">⬇️🏷️ Download all the metadata for <span class='name'>FORTRESS NW Wrapper TES submission</span> in JSON-LD format</a>
+
+
+<div id="check"></div>
+
+
+</div>
+
+
+
+<div id="summary">
+<div class='all-meta'>
+            <div>
+                <h3> FORTRESS NW Wrapper TES submission</h3>
+                
+                
+                
+                
+        <div id="./">
+            
+            <table class="table metadata table-striped" >
+                <tbody><tr>
+            <th style="text-align:left;" class="prop">@id</th>
+            <td style='text-align:left'><span>./</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">name<span>&nbsp;</span><a href="http://schema.org/name">[?]</a></th>
+            <td style='text-align:left'><span>FORTRESS NW Wrapper TES submission</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">@type</th>
+            <td style='text-align:left'><span>Dataset</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">description<span>&nbsp;</span><a href="http://schema.org/description">[?]</a></th>
+            <td style='text-align:left'><span>Process Run RO-Crate describing a planned submission of the FORTRESS NW Wrapper through 5S-TES using an externally hosted Docker image and a TES task message.</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">datePublished<span>&nbsp;</span><a href="http://schema.org/datePublished">[?]</a></th>
+            <td style='text-align:left'><span>2024-06-17T12:00:00+00:00</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">license<span>&nbsp;</span><a href="http://schema.org/license">[?]</a></th>
+            <td style='text-align:left'><span>notspecified</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">conformsTo<span>&nbsp;</span><a href="http://purl.org/dc/terms/conformsTo">[?]</a></th>
+            <td style='text-align:left'><a href="#https%3A//w3id.org/ro/wfrun/process/0.5">Process Run Crate</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
+            <td style='text-align:left'><a href="#tes-message.json">TES task message for FORTRESS NW Wrapper submission</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">mentions<span>&nbsp;</span><a href="http://schema.org/mentions">[?]</a></th>
+            <td style='text-align:left'><ul>
+                        <li><a href="#%23fortress-tes-run">Submit FORTRESS NW Wrapper through 5S-TES</a></li>
+                        
+                        <li><a href="#%23fortress-container-image">research-containers/fortress</a></li>
+                        </ul></td>
+            </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
+            <th style="text-align:left;" class="prop">about<span>&nbsp;</span><a href="http://schema.org/about">[?]</a></th>
+            <td style='text-align:left'><a href="#ro-crate-metadata.json">ro-crate-metadata.json</a></td>
+            </tr></tbody>
+            </table>
+        </div>
+            </div>
+        <hr/><br/><br/>
+            <div>
+                <h3><a href="https://w3id.org/ro/wfrun/process/0.5">Go to: </a> Process Run Crate</h3>
+                
+                
+                
+                
+        <div id="https://w3id.org/ro/wfrun/process/0.5">
+            
+            <table class="table metadata table-striped" >
+                <tbody><tr>
+            <th style="text-align:left;" class="prop">@id</th>
+            <td style='text-align:left'><a href="https://w3id.org/ro/wfrun/process/0.5">https://w3id.org/ro/wfrun/process/0.5</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">name<span>&nbsp;</span><a href="http://schema.org/name">[?]</a></th>
+            <td style='text-align:left'><span>Process Run Crate</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">@type</th>
+            <td style='text-align:left'><span>CreativeWork</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">version<span>&nbsp;</span><a href="http://schema.org/version">[?]</a></th>
+            <td style='text-align:left'><span>0.5</span></td>
+            </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
+            <th style="text-align:left;" class="prop">conformsTo<span>&nbsp;</span><a href="http://purl.org/dc/terms/conformsTo">[?]</a></th>
+            <td style='text-align:left'><a href="#./">FORTRESS NW Wrapper TES submission</a></td>
+            </tr></tbody>
+            </table>
+        </div>
+            </div>
+        <hr/><br/><br/>
+            <div>
+                <h3><a href="tes-message.json">⬇️ Download: </a> TES task message for FORTRESS NW Wrapper submission</h3>
+                
+                
+                
+                
+        <div id="tes-message.json">
+            
+            <table class="table metadata table-striped" >
+                <tbody><tr>
+            <th style="text-align:left;" class="prop">@id</th>
+            <td style='text-align:left'><span>tes-message.json</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">name<span>&nbsp;</span><a href="http://schema.org/name">[?]</a></th>
+            <td style='text-align:left'><span>TES task message for FORTRESS NW Wrapper submission</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">@type</th>
+            <td style='text-align:left'><span>File</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">description<span>&nbsp;</span><a href="http://schema.org/description">[?]</a></th>
+            <td style='text-align:left'><span>TES task request containing the container image, command and configured output directory for the FORTRESS NW Wrapper submission.</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">encodingFormat<span>&nbsp;</span><a href="http://schema.org/encodingFormat">[?]</a></th>
+            <td style='text-align:left'><span>application/json</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">conformsTo<span>&nbsp;</span><a href="http://purl.org/dc/terms/conformsTo">[?]</a></th>
+            <td style='text-align:left'><a href="#https%3A//ga4gh.github.io/task-execution-schemas/openapi/task_execution_service.openapi.yaml%23/components/schemas/tesTask">GA4GH TES Task schema</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">about<span>&nbsp;</span><a href="http://schema.org/about">[?]</a></th>
+            <td style='text-align:left'><a href="#%23fortress-tes-run">Submit FORTRESS NW Wrapper through 5S-TES</a></td>
+            </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
+            <th style="text-align:left;" class="prop">hasPart<span>&nbsp;</span><a href="http://schema.org/hasPart">[?]</a></th>
+            <td style='text-align:left'><a href="#./">FORTRESS NW Wrapper TES submission</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">object<span>&nbsp;</span><a href="http://schema.org/object">[?]</a></th>
+            <td style='text-align:left'><a href="#%23fortress-tes-run">Submit FORTRESS NW Wrapper through 5S-TES</a></td>
+            </tr></tbody>
+            </table>
+        </div>
+            </div>
+        <hr/><br/><br/>
+            <div>
+                <h3> Submit FORTRESS NW Wrapper through 5S-TES</h3>
+                
+                
+                
+                
+        <div id="#fortress-tes-run">
+            
+            <table class="table metadata table-striped" >
+                <tbody><tr>
+            <th style="text-align:left;" class="prop">@id</th>
+            <td style='text-align:left'><span>#fortress-tes-run</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">name<span>&nbsp;</span><a href="http://schema.org/name">[?]</a></th>
+            <td style='text-align:left'><span>Submit FORTRESS NW Wrapper through 5S-TES</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">@type</th>
+            <td style='text-align:left'><span>CreateAction</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">description<span>&nbsp;</span><a href="http://schema.org/description">[?]</a></th>
+            <td style='text-align:left'><span>Execute the FORTRESS NW Wrapper command through 5S-TES using the TES task request in tes-message.json and a Docker image retrieved from Harbor.</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">instrument<span>&nbsp;</span><a href="http://schema.org/instrument">[?]</a></th>
+            <td style='text-align:left'><a href="#%23fortress-nw-wrapper">FORTRESS NW Wrapper</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">object<span>&nbsp;</span><a href="http://schema.org/object">[?]</a></th>
+            <td style='text-align:left'><a href="#tes-message.json">TES task message for FORTRESS NW Wrapper submission</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">containerImage<span>&nbsp;</span><a href="https://w3id.org/ro/terms/workflow-run#containerImage">[?]</a></th>
+            <td style='text-align:left'><a href="#%23fortress-container-image">research-containers/fortress</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">actionStatus<span>&nbsp;</span><a href="http://schema.org/actionStatus">[?]</a></th>
+            <td style='text-align:left'><a href="http://schema.org/PotentialActionStatus">http://schema.org/PotentialActionStatus</a></td>
+            </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
+            <th style="text-align:left;" class="prop">mentions<span>&nbsp;</span><a href="http://schema.org/mentions">[?]</a></th>
+            <td style='text-align:left'><a href="#./">FORTRESS NW Wrapper TES submission</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">about<span>&nbsp;</span><a href="http://schema.org/about">[?]</a></th>
+            <td style='text-align:left'><a href="#tes-message.json">TES task message for FORTRESS NW Wrapper submission</a></td>
+            </tr></tbody>
+            </table>
+        </div>
+            </div>
+        <hr/><br/><br/>
+            <div>
+                <h3> research-containers/fortress</h3>
+                
+                
+                
+                
+        <div id="#fortress-container-image">
+            
+            <table class="table metadata table-striped" >
+                <tbody><tr>
+            <th style="text-align:left;" class="prop">@id</th>
+            <td style='text-align:left'><span>#fortress-container-image</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">name<span>&nbsp;</span><a href="http://schema.org/name">[?]</a></th>
+            <td style='text-align:left'><span>research-containers/fortress</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">@type</th>
+            <td style='text-align:left'><span>ContainerImage</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">additionalType<span>&nbsp;</span><a href="http://schema.org/additionalType">[?]</a></th>
+            <td style='text-align:left'><a href="https://w3id.org/ro/terms/workflow-run#DockerImage">https://w3id.org/ro/terms/workflow-run#DockerImage</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">registry<span>&nbsp;</span><a href="https://w3id.org/ro/terms/workflow-run#registry">[?]</a></th>
+            <td style='text-align:left'><span>10.99.53.84.sslip.io</span></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">tag<span>&nbsp;</span><a href="https://w3id.org/ro/terms/workflow-run#tag">[?]</a></th>
+            <td style='text-align:left'><span>main</span></td>
+            </tr><tr><th colspan="2" style="text-align:center">Items that reference this one</th><tr><tr>
+            <th style="text-align:left;" class="prop">mentions<span>&nbsp;</span><a href="http://schema.org/mentions">[?]</a></th>
+            <td style='text-align:left'><a href="#./">FORTRESS NW Wrapper TES submission</a></td>
+            </tr><tr>
+            <th style="text-align:left;" class="prop">containerImage<span>&nbsp;</span><a href="https://w3id.org/ro/terms/workflow-run#containerImage">[?]</a></th>
+            <td style='text-align:left'><a href="#%23fortress-tes-run">Submit FORTRESS NW Wrapper through 5S-TES</a></td>
+            </tr></tbody>
+            </table>
+        </div>
+            </div>
+        <hr/><br/><br/></div>
+</div>
+
+
+
+
+
+</body>
+</html>
