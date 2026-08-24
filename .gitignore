@@ -7,3 +7,4 @@ build/
 __pycache__/
 *.pyc
 .env
+5s-tes-wb-config.yaml
