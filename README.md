@@ -1,5 +1,11 @@
 # HDR RO-Crate Toolkits
 
+## Requirements
+
+```
+Python 3.13
+```
+
 ## Development Setup
 
 ### 1. Clone the repo
@@ -47,16 +53,18 @@ Make a copy of `env.template`, rename it to `.env` and populate the variables.
 
 Required variables:
 - `CRATEY_VALIDATOR_API_URL`: The URL for the ro-crate validation service. This is `http://localhost:5001` for the demonstration 5S-TES stack.
-- `TES_SUBMISSION_API_URL`: The URL for the 5S-TES submission API. This is `http://localhost:5034` for the demonstration 5S-TES stack.
-- `TES_SUBMISSION_API_TOKEN`: The API token for accessing the 5S-TES submission API. This can be obtained from the submission layer webpage.
 
-### 4. Run the tests
+### 4. Configure the 5S TES Workbench config.yml
+
+Copy the `example-config.yml` from the [5S-TES-Workbench](https://github.com/federated-research/5S-TES-Workbench) repo and update the values. The path to this config file will be used when running the `rocrate-to-tes` command.
+
+### 5. Run the tests
 
 ```
 pytest -q
 ```
 
-### 5. Run the tool
+### 6. Run the tool
 
 The `rocrate-to-tes` command accepts:
 - a path to `ro-crate-metadata.json`
@@ -64,18 +72,18 @@ The `rocrate-to-tes` command accepts:
 - a path to a ZIP-packaged RO-Crate containing `ro-crate-metadata.json`
 
 ```
-rocrate-to-tes ro-crate-metadata.json
+rocrate-to-tes ro-crate-metadata.json --config_path 5s-tes-wb-config.yaml
 ```
 
 Examples:
 
 ```
-rocrate-to-tes /path/to/ro-crate-metadata.json
-rocrate-to-tes /path/to/ro-crate-directory
-rocrate-to-tes /path/to/ro-crate.zip
+rocrate-to-tes /path/to/ro-crate-metadata.json --config_path /path/to/5s-tes-wb-config.yaml
+rocrate-to-tes /path/to/ro-crate-directory --config_path /path/to/5s-tes-wb-config.yaml
+rocrate-to-tes /path/to/ro-crate.zip --config_path /path/to/5s-tes-wb-config.yaml
 ```
 
-### 6. Expected Output
+### 7. Expected Output
 
 If the tool runs successfully it should print the following information to the terminal:
 - 'Validation passed' status, either True or False
