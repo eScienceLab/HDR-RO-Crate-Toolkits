@@ -16,7 +16,10 @@ def parse_args(argv=None):
     """Parse command-line arguments for the RO-Crate to TES extractor."""
 
     parser = argparse.ArgumentParser(
-        description="Extract a TES message embedded in RO-Crate metadata."
+        description=(
+            "Extract a TES message embedded in RO-Crate metadata and submits "
+            "it to the configured TES endpoint."
+        ),
     )
     parser.add_argument(
         "input_path",
@@ -30,8 +33,17 @@ def parse_args(argv=None):
         required=True,
         help="Path to a Five Safes TES Workbench config YAML file.",
     )
-    parser.add_argument("--disable_roc_validator", action="store_true")
-    parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument(
+        "--disable_roc_validator",
+        action="store_true",
+        help="Disable the RO-Crate validator",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Increase verbosity",
+    )
     return parser.parse_args(argv)
 
 
