@@ -30,6 +30,7 @@ def parse_args(argv=None):
         required=True,
         help="Path to a Five Safes TES Workbench config YAML file.",
     )
+    parser.add_argument("--disable_roc_validator", action="store_true")
     parser.add_argument("-v", "--verbose", action="store_true")
     return parser.parse_args(argv)
 
@@ -51,17 +52,18 @@ def main(argv=None):
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
-    try:
-        metadata_valid = is_rocrate_metadata_valid(crate_metadata)
-    except (OSError, json.JSONDecodeError, ValueError) as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 1
+    if not args.disable_roc_validator:
+        try:
+            metadata_valid = is_rocrate_metadata_valid(crate_metadata)
+        except (OSError, json.JSONDecodeError, ValueError) as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
 
-    if metadata_valid:
-        print("RO-Crate metadata validation successful")
-    else:
-        print(f"Error: Invalid RO-Crate metadata", file=sys.stderr)
-        return 1
+        if metadata_valid:
+            print("RO-Crate metadata validation successful")
+        else:
+            print(f"Error: Invalid RO-Crate metadata", file=sys.stderr)
+            return 1
 
     try:
         tes_message = extract_or_load_tes_message(crate_metadata, args.input_path)

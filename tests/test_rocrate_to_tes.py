@@ -383,6 +383,29 @@ def test_main_prints_extracted_message(capsys, mock_wb_config, mock_clients, met
     assert '"name": "Hello World"' in output
     assert  '"executors": [\n    {\n      "image": "ubuntu"' in output
 
+@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
+def test_main_less_verbose(capsys, mock_wb_config, mock_clients, metadata_path):
+    exit_code = main([str(metadata_path), "--config_path", mock_wb_config])
+
+    captured = capsys.readouterr()
+    output = captured.out
+
+    assert exit_code == 0
+    assert '"name": "Hello World"' not in output
+    assert  "RO-Crate metadata validation successful" in output
+    assert  "Submitted task ID: 1" in output
+
+@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
+def test_main_no_roc_validation(capsys, mock_wb_config, mock_clients, metadata_path):
+    exit_code = main([str(metadata_path), "--config_path", mock_wb_config, "--disable_roc_validator"])
+
+    captured = capsys.readouterr()
+    output = captured.out
+
+    assert exit_code == 0
+    assert  "RO-Crate metadata validation successful" not in output
+    assert  "Submitted task ID: 1" in output
+
 @pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.parent.name}")
 def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_wb_config, mock_clients, dir):
     # The CLI should also work when pointed at the root directory of a crate.
