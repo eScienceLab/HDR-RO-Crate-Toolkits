@@ -374,14 +374,14 @@ def test_extract_or_load_tes_message_rejects_invalid_tes_payload_after_selection
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
 def test_main_prints_extracted_message(capsys, mock_wb_config, mock_clients, metadata_path):
     # The CLI should emit the extracted TES message as JSON on stdout.
-    exit_code = main([str(metadata_path), "--config_path", mock_wb_config])
+    exit_code = main([str(metadata_path), "--config_path", mock_wb_config, "-v"])
 
     captured = capsys.readouterr()
     output = captured.out
 
     assert exit_code == 0
-    # assert '"name": "Hello World"' in output
-    # assert  '"executors": [\n    {\n      "image": "ubuntu"' in output
+    assert '"name": "Hello World"' in output
+    assert  '"executors": [\n    {\n      "image": "ubuntu"' in output
 
 @pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.parent.name}")
 def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_wb_config, mock_clients, dir):
@@ -389,13 +389,13 @@ def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_wb_config, mock_c
     crate_dir = tmp_path / "crate"
     shutil.copytree(dir, crate_dir)
 
-    exit_code = main([str(crate_dir), "--config_path", mock_wb_config])
+    exit_code = main([str(crate_dir), "--config_path", mock_wb_config, "-v"])
 
     captured = capsys.readouterr()
     output = captured.out
 
     assert exit_code == 0
-    # assert '"name": "Hello World"' in output
+    assert '"name": "Hello World"' in output
 
 @pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.parent.name}")
 def test_main_accepts_rocrate_zip_archive(tmp_path, capsys, mock_wb_config, mock_clients, dir):
@@ -406,10 +406,10 @@ def test_main_accepts_rocrate_zip_archive(tmp_path, capsys, mock_wb_config, mock
             if file.is_file():
                 zip_file.write(file, arcname=file.relative_to(dir))
 
-    exit_code = main([str(archive_path), "--config_path", mock_wb_config])
+    exit_code = main([str(archive_path), "--config_path", mock_wb_config, "-v"])
 
     captured = capsys.readouterr()
     output = captured.out
 
     assert exit_code == 0
-    # assert '"name": "Hello World"' in output
+    assert '"name": "Hello World"' in output

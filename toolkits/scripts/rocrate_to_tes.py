@@ -1,11 +1,15 @@
 import argparse
 import json
+import logging
 import sys
 
 from five_safes_tes_workbench.workbench import Workbench
 
 from toolkits.clients.tes_client import load_rocrate_metadata, extract_or_load_tes_message
 from toolkits.services.validation_service import is_rocrate_metadata_valid
+
+
+logging.disable(logging.INFO)
 
 
 def parse_args(argv=None):
@@ -26,6 +30,7 @@ def parse_args(argv=None):
         required=True,
         help="Path to a Five Safes TES Workbench config YAML file.",
     )
+    parser.add_argument("-v", "--verbose", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -41,12 +46,20 @@ def main(argv=None):
 
     try:
         crate_metadata = load_rocrate_metadata(args.input_path)
+        print("RO-Crate metadata loaded")
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    try:
         metadata_valid = is_rocrate_metadata_valid(crate_metadata)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
-    if not metadata_valid:
+    if metadata_valid:
+        print("RO-Crate metadata validation successful")
+    else:
         print(f"Error: Invalid RO-Crate metadata", file=sys.stderr)
         return 1
 
@@ -56,10 +69,17 @@ def main(argv=None):
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
+    if args.verbose:
+        print("TES message:")
+        json.dump(tes_message, sys.stdout, indent=2)
+        sys.stdout.write("\n")
+
     wb = Workbench()
     wb.validate(config_path=args.config_path)
     wb.build_tes.custom(**tes_message)
-    wb.submit()
+    task_id = wb.submit()
+
+    print(f"Submitted task ID: {task_id}")
 
     return 0
 
