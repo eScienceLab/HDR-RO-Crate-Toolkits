@@ -7,7 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "requests==2.32.5",
     "python-dotenv==1.2.2",
-    "five-safes-tes-workbench==0.3.1",
+    "five-safes-tes-workbench==0.4.0",
 ]
 
 [project.optional-dependencies]
@@ -17,6 +17,7 @@ dev = [
 
 [project.scripts]
 rocrate-to-tes = "toolkits.scripts.rocrate_to_tes:main"
+rocrate-tes-fetch = "toolkits.scripts.rocrate_save_tes:main"
 
 [build-system]
 requires = ["setuptools>=61.0"]
