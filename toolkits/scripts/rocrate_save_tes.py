@@ -1,10 +1,11 @@
 import argparse
+import json
 import logging
+import sys
 
 from pathlib import Path
 # from five_safes_tes_workbench.workbench import Workbench
-
-from toolkits.clients.tes_client import load_rocrate_metadata
+from fivesafe_crate_py import FiveSafesCrate
 
 
 logging.disable(logging.INFO)
@@ -16,19 +17,19 @@ def parse_args(argv=None):
     parser = argparse.ArgumentParser(
         description="Save TES result in an RO-Crate.",
     )
+    # TODO: Read task_id from an RO-Crate metadata file and remove this arg
     parser.add_argument(
         "task_id",
         type=int,
         help="Task ID of the submitted TES task."
     )
-    # TODO: Uncomment and replace task_id arg 
-    # parser.add_argument(
-    #     "input_path",
-    #     help=(
-    #         "Path to an RO-Crate metadata JSON file or to the root directory "
-    #         "of an RO-Crate, or to a ZIP-packaged RO-Crate."
-    #     ),
-    # )
+    parser.add_argument(
+        "input_path",
+        help=(
+            "Path to an RO-Crate metadata JSON file or to the root directory "
+            "of an RO-Crate, or to a ZIP-packaged RO-Crate."
+        ),
+    )
     parser.add_argument(
         "--config_path",
         required=True,
@@ -62,7 +63,8 @@ def main(argv=None):
 
     # Temporary Fix ===============================
     # The endpoint used in get_project_s3_info is currently 404 not found
-    # TODO: Remove temporary fix when get_project_s3_info is working
+    # TODO: Remove temporary fix when get_project_s3_info is working,
+    #       which would be when 5S TES deployment version is bumped to 3.2.3
 
     import five_safes_tes_workbench.helpers.project_s3_info
     from five_safes_tes_workbench.schema.config_schema import ConfigValidationModel
@@ -76,17 +78,30 @@ def main(argv=None):
     from five_safes_tes_workbench.workbench import Workbench
     # End Temporary Fix ===========================
 
-    # try:
-    #     crate_metadata = load_rocrate_metadata(args.input_path)
-    #     print("RO-Crate metadata loaded")
-    # except (OSError, json.JSONDecodeError, ValueError) as exc:
-    #     print(f"Error: {exc}", file=sys.stderr)
-    #     return 1
+    try:
+        crate = FiveSafesCrate(args.input_path, version="1.0")
+        print("RO-Crate loaded")
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
 
     wb = Workbench()
     wb.validate(config_path=args.config_path)
 
-    paths = wb.fetch_outputs(task_id=args.task_id, output_dir=args.output_dir / args.roc_name)
+    roc_output_dir = args.output_dir / args.roc_name
+    paths_dict = wb.fetch_outputs(task_id=args.task_id, output_dir=roc_output_dir)
+
+    if paths_dict:
+        paths = [path for path_list in paths_dict.values() for path in path_list]
+        for path in paths:
+            relative_path = path.relative_to(roc_output_dir)
+            crate.add_file(path.as_posix(), relative_path.as_posix())
+        # TODO: Mention CreateAction result, with actionStatus http://schema.org/CompletedActionStatus
+        crate.write(roc_output_dir)
+    else:
+        # TODO: In progress or does not exist
+        pass
+    print(f"RO-Crate {args.roc_name} created at {args.output_dir}")
 
     return 0
 
