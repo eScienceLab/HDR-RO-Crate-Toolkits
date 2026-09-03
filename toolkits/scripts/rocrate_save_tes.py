@@ -2,11 +2,14 @@ import argparse
 import json
 import logging
 import sys
+import uuid
 
 from pathlib import Path
 # from five_safes_tes_workbench.workbench import Workbench
 from fivesafe_crate_py import FiveSafesCrate
+from rocrate.model.contextentity import ContextEntity
 
+from toolkits.clients.tes_client import is_tes_message_entity
 
 logging.disable(logging.INFO)
 
@@ -85,6 +88,17 @@ def main(argv=None):
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
+    try:
+        matches = [entity for entity in crate.data_entities if is_tes_message_entity(entity.properties())]
+        if not matches:
+            raise ValueError("No TES message found in RO-Crate metadata.")
+        if len(matches) > 1:
+            raise ValueError("Multiple TES message candidates found in RO-Crate metadata.")
+        tes_msg_entity = matches[0]
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
     wb = Workbench()
     wb.validate(config_path=args.config_path)
 
@@ -92,11 +106,24 @@ def main(argv=None):
     paths_dict = wb.fetch_outputs(task_id=args.task_id, output_dir=roc_output_dir)
 
     if paths_dict:
+        result_entities = []
         paths = [path for path_list in paths_dict.values() for path in path_list]
         for path in paths:
             relative_path = path.relative_to(roc_output_dir)
-            crate.add_file(path.as_posix(), relative_path.as_posix())
-        # TODO: Mention CreateAction result, with actionStatus http://schema.org/CompletedActionStatus
+            result_entity = crate.add_file(path.as_posix(), relative_path.as_posix())
+            result_entities.append(result_entity)
+
+        action_id = uuid.uuid4().urn
+        action_properties = {
+            "@type": ["CreateAction", "prov:Activity"],
+            # TODO: "agent" - Person or Organisation
+            "actionStatus": {"@id": "http://schema.org/CompletedActionStatus"},
+            "object": tes_msg_entity,
+        }
+        if result_entities:
+            action_properties["result"] = result_entity if len(result_entities) == 1 else result_entities
+        action = crate.add(ContextEntity(crate, identifier=action_id, properties=action_properties))
+        crate.root_dataset["mentions"] = [action]
         crate.write(roc_output_dir)
     else:
         # TODO: In progress or does not exist
