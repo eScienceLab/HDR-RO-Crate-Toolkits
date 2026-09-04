@@ -1,0 +1,49 @@
+{
+    "@context": "https://w3id.org/ro/crate/1.2/context",
+    "@graph": [
+        {
+            "@id": "./",
+            "@type": "Dataset",
+            "conformsTo": [
+                {
+                    "@id": "https://w3id.org/5s-crate/1.0"
+                }
+            ],
+            "name": "Hello World TES Task",
+            "description": "A simple submission used to demo the toolkits",
+            "datePublished": "2026-09-02T13:58:16+00:00",
+            "hasPart": [
+                {
+                    "@id": "tes.json"
+                }
+            ]
+        },
+        {
+            "@id": "ro-crate-metadata.json",
+            "@type": "CreativeWork",
+            "about": {
+                "@id": "./"
+            },
+            "conformsTo": {
+                "@id": "https://w3id.org/ro/crate/1.2"
+            }
+        },
+        {
+            "@id": "https://w3id.org/5s-crate/1.0",
+            "@type": [
+                "CreativeWork",
+                "Profile"
+            ],
+            "name": "Five Safes RO-Crate profile",
+            "version": "1.0"
+        },
+        {
+            "@id": "tes.json",
+            "@type": "File",
+            "conformsTo": {
+                "@id": "https://ga4gh.github.io/task-execution-schemas/openapi/task_execution_service.openapi.yaml#/components/schemas/tesTask"
+            },
+            "encodingFormat": "application/json"
+        }
+    ]
+}

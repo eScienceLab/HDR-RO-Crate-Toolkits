@@ -1,0 +1,29 @@
+{
+    "state": 0,
+    "name": "Hello World",
+    "inputs": [],
+    "outputs": [
+        {
+            "name": "Stdout",
+            "description": "Stdout results",
+            "url": "s3://",
+            "path": "/outputs",
+            "type": "DIRECTORY"
+        }
+    ], 
+    "executors": [
+        {
+            "image": "ubuntu",
+            "command": ["echo", "Hello World"],
+            "workdir": "/outputs",
+            "stdout": "/outputs/stdout"
+        }
+    ],
+    "volumes": null,
+    "tags": {
+        "project": "Testing",
+        "tres": "DEMO"
+    },
+    "logs": null,
+    "creation_time": null
+}
