@@ -41,10 +41,29 @@ def mock_clients(monkeypatch):
         lambda data: True
     )
     monkeypatch.setattr(
-        "toolkits.scripts.rocrate_to_tes.create_tes_task",
-        lambda data: {"$id": "1", "id": "1"}
+        "toolkits.scripts.rocrate_to_tes.Workbench.submit",
+        lambda data: 1
     )
     yield
+
+@pytest.fixture
+def mock_wb_config(tmp_path):
+    path = tmp_path / "config.yaml"
+    path.write_text(
+        """
+        config:
+          project: "Testing"
+          tes_base_url: "https://submission.layer.api"
+          minio_sts_endpoint: "https://minio.api/sts"
+          minio_endpoint: "https://minio.api"
+          minio_output_bucket: "11111outputtre"
+          tres:
+            - "DEMO"
+        auth:
+          access_token: "SECRET"
+        """
+    )
+    return str(path)
 
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
 def test_extract_or_load_tes_message_from_fixture(metadata_path):
@@ -353,9 +372,9 @@ def test_extract_or_load_tes_message_rejects_invalid_tes_payload_after_selection
         extract_or_load_tes_message(crate_metadata, "")
 
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
-def test_main_prints_extracted_message(capsys, mock_clients, metadata_path):
+def test_main_prints_extracted_message(capsys, mock_wb_config, mock_clients, metadata_path):
     # The CLI should emit the extracted TES message as JSON on stdout.
-    exit_code = main([str(metadata_path)])
+    exit_code = main([str(metadata_path), "--config_path", mock_wb_config, "-v"])
 
     captured = capsys.readouterr()
     output = captured.out
@@ -364,13 +383,36 @@ def test_main_prints_extracted_message(capsys, mock_clients, metadata_path):
     assert '"name": "Hello World"' in output
     assert  '"executors": [\n    {\n      "image": "ubuntu"' in output
 
+@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
+def test_main_less_verbose(capsys, mock_wb_config, mock_clients, metadata_path):
+    exit_code = main([str(metadata_path), "--config_path", mock_wb_config])
+
+    captured = capsys.readouterr()
+    output = captured.out
+
+    assert exit_code == 0
+    assert '"name": "Hello World"' not in output
+    assert  "RO-Crate metadata validation successful" in output
+    assert  "Submitted task ID: 1" in output
+
+@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
+def test_main_no_roc_validation(capsys, mock_wb_config, mock_clients, metadata_path):
+    exit_code = main([str(metadata_path), "--config_path", mock_wb_config, "--disable_roc_validator"])
+
+    captured = capsys.readouterr()
+    output = captured.out
+
+    assert exit_code == 0
+    assert  "RO-Crate metadata validation successful" not in output
+    assert  "Submitted task ID: 1" in output
+
 @pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.parent.name}")
-def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_clients, dir):
+def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_wb_config, mock_clients, dir):
     # The CLI should also work when pointed at the root directory of a crate.
     crate_dir = tmp_path / "crate"
     shutil.copytree(dir, crate_dir)
 
-    exit_code = main([str(crate_dir)])
+    exit_code = main([str(crate_dir), "--config_path", mock_wb_config, "-v"])
 
     captured = capsys.readouterr()
     output = captured.out
@@ -379,7 +421,7 @@ def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_clients, dir):
     assert '"name": "Hello World"' in output
 
 @pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.parent.name}")
-def test_main_accepts_rocrate_zip_archive(tmp_path, capsys, mock_clients, dir):
+def test_main_accepts_rocrate_zip_archive(tmp_path, capsys, mock_wb_config, mock_clients, dir):
     # The CLI should also work when pointed at a ZIP-packaged RO-Crate.
     archive_path = tmp_path / "crate.zip"
     with ZipFile(archive_path, "w") as zip_file:
@@ -387,7 +429,7 @@ def test_main_accepts_rocrate_zip_archive(tmp_path, capsys, mock_clients, dir):
             if file.is_file():
                 zip_file.write(file, arcname=file.relative_to(dir))
 
-    exit_code = main([str(archive_path)])
+    exit_code = main([str(archive_path), "--config_path", mock_wb_config, "-v"])
 
     captured = capsys.readouterr()
     output = captured.out

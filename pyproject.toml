@@ -3,10 +3,11 @@ name = "rocrate-toolkits"
 version = "0.0.0"
 description = "HDR RO-Crate Toolkits"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.13"
 dependencies = [
     "requests==2.32.5",
     "python-dotenv==1.2.2",
+    "five-safes-tes-workbench==0.3.1",
 ]
 
 [project.optional-dependencies]
