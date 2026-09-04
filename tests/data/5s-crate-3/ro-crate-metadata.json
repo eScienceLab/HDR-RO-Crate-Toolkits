@@ -1,0 +1,125 @@
+{
+    "@context": "https://w3id.org/ro/crate/1.2/context",
+    "@graph": [
+        {
+            "@id": "https://tre72.example.org/activities/A123/current/",
+            "@type": "Dataset",
+            "conformsTo": [
+                {
+                    "@id": "https://w3id.org/5s-crate/1.0"
+                }
+            ],
+            "identifier": [
+                {
+                    "@id": "https://tre72.example.org/activities/A123/current/"
+                },
+                {
+                    "@id": "urn:uuid:1ec84024-798f-47b0-84bc-26a4a603a1ec"
+                }
+            ],
+            "dct:isVersionOf": {"@id": "https://tre72.example.org/activities/A123"},
+            "name": "Hello World TES Task",
+            "description": "A simple submission used to demo the toolkits",
+            "datePublished": "2026-09-02T13:58:16+00:00",
+            "hasPart": [
+                {
+                    "@id": "tes.json"
+                },
+                {
+                    "@id": "stdout"
+                }
+            ],
+            "mentions": [
+                {
+                    "@id": "urn:uuid:b1563e90-fcdb-4ed5-80fa-21c8ee1d969e"
+                },
+                {
+                    "@id": "urn:uuid:37ab67b0-d960-45c5-9eeb-3983cb5f476b"
+                }
+            ]
+        },
+        {
+            "@id": "ro-crate-metadata.json",
+            "@type": "CreativeWork",
+            "about": {
+                "@id": "https://tre72.example.org/activities/A123/current/"
+            },
+            "conformsTo": {
+                "@id": "https://w3id.org/ro/crate/1.2"
+            }
+        },
+        {
+            "@id": "tes.json",
+            "@type": "File",
+            "conformsTo": {
+                "@id": "https://ga4gh.github.io/task-execution-schemas/openapi/task_execution_service.openapi.yaml#/components/schemas/tesTask"
+            },
+            "encodingFormat": "application/json"
+        },
+        {
+            "@id": "https://w3id.org/5s-crate/1.0",
+            "@type": [
+                "CreativeWork",
+                "Profile"
+            ],
+            "name": "Five Safes RO-Crate profile",
+            "version": "1.0"
+        },
+        {
+            "@id": "urn:uuid:b1563e90-fcdb-4ed5-80fa-21c8ee1d969e",
+            "@type": [
+                "AskAction",
+                "prov:Activity"
+            ],
+            "name": "Submit TES task",
+            "agent": {"@id": "https://orcid.org/0000-0002-1825-0097"},
+            "provider": {"@id": "https://ror.org/027m9bs27"},
+            "actionStatus": {
+                "@id": "http://schema.org/CompletedActionStatus"
+            },
+            "object": {
+                "@id": "tes.json"
+            }
+        },
+        {
+            "@id": "https://orcid.org/0000-0002-1825-0097",
+            "@type": "Person",
+            "name": "Person Name",
+            "affiliation": {"@id": "https://ror.org/027m9bs27"}
+        },
+        {
+            "@id": "https://ror.org/027m9bs27",
+            "@type": "Organization",
+            "name": "TRE Provider"
+        },
+        {
+            "@id": "urn:uuid:1ec84024-798f-47b0-84bc-26a4a603a1ec",
+            "@type": "PropertyValue",
+            "name": "TES Task ID",
+            "value": 1
+        },
+        {
+            "@id": "stdout",
+            "@type": "File"
+        },
+        {
+            "@id": "urn:uuid:37ab67b0-d960-45c5-9eeb-3983cb5f476b",
+            "@type": [
+                "CreateAction",
+                "prov:Activity"
+            ],
+            "name": "TES task result",
+            "agent": {"@id": "https://orcid.org/0000-0002-1825-0097"},
+            "provider": {"@id": "https://ror.org/027m9bs27"},
+            "actionStatus": {
+                "@id": "http://schema.org/CompletedActionStatus"
+            },
+            "object": {
+                "@id": "tes.json"
+            },
+            "result": {
+                "@id": "stdout"
+            }
+        }
+    ]
+}
