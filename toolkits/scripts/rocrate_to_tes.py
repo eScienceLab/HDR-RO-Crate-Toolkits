@@ -52,10 +52,11 @@ def main(argv=None):
         or does not contain exactly one TES payload.
     """
 
-    configure_logging()
-    logger = logging.getLogger(__name__)
-
     args = parse_args(argv)
+
+    logging_level = "DEBUG" if args.verbose else "INFO"
+    configure_logging(logging_level)
+    logger = logging.getLogger(__name__)
 
     try:
         crate_metadata = load_rocrate_metadata(args.input_path)
@@ -79,13 +80,10 @@ def main(argv=None):
 
     try:
         tes_message = extract_or_load_tes_message(crate_metadata, args.input_path)
+        logger.debug("TES message: \n%s", json.dumps(tes_message, indent=2))
     except (ValueError) as exc:
         logger.error("Error: %s", exc)
         return 1
-
-    if args.verbose:
-        logger.info("TES message:")
-        logger.info("%s", json.dump(tes_message, indent=2))
 
     wb = Workbench()
     wb.validate(config_path=args.config_path)
