@@ -17,7 +17,9 @@
             "dct:isVersionOf": {"@id": "https://tre72.example.org/activities/A123"},
             "name": "Hello World TES Task",
             "description": "A simple submission used to demo the toolkits",
+            "dateCreated": "2026-09-02T13:58:16+00:00",
             "datePublished": "2026-09-02T13:58:16+00:00",
+            "license": {"@id": "https://creativecommons.org/publicdomain/zero/1.0/"},
             "hasPart": [
                 {
                     "@id": "tes.json"
