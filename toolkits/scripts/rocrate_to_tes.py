@@ -3,6 +3,7 @@ import json
 import logging
 
 from five_safes_tes_workbench.workbench import Workbench
+from five_safes_tes_workbench.common.exceptions.submission_errors import SubmissionError
 
 from toolkits.config.logging import configure_logging
 from toolkits.clients.tes_client import load_rocrate_metadata, extract_or_load_tes_message
@@ -62,14 +63,14 @@ def main(argv=None):
         crate_metadata = load_rocrate_metadata(args.input_path)
         logger.info("RO-Crate metadata loaded")
     except (OSError, json.JSONDecodeError, ValueError) as exc:
-        logger.error("Error: %s", exc)
+        logger.error(exc)
         return 1
 
     if not args.disable_roc_validator:
         try:
             metadata_valid = is_rocrate_metadata_valid(crate_metadata)
         except (OSError, json.JSONDecodeError, ValueError) as exc:
-            logger.error("Error: %s", exc)
+            logger.error(exc)
             return 1
 
         if metadata_valid:
@@ -81,16 +82,21 @@ def main(argv=None):
     try:
         tes_message = extract_or_load_tes_message(crate_metadata, args.input_path)
         logger.debug("TES message: \n%s", json.dumps(tes_message, indent=2))
-    except (ValueError) as exc:
-        logger.error("Error: %s", exc)
+    except ValueError as exc:
+        logger.error(exc)
         return 1
 
     wb = Workbench()
     wb.validate(config_path=args.config_path)
-    wb.build_tes.custom(**tes_message)
-    task_id = wb.submit()
 
-    logger.info(f"Submitted task ID: {task_id}")
+    try:
+        wb.build_tes.custom(**tes_message)
+        task_id = wb.submit()
+        logger.info(f"Submitted task ID: {task_id}")
+    except SubmissionError as exc:
+        logger.error(exc)
+        return 1
+
 
     return 0
 
