@@ -9,6 +9,7 @@ from pathlib import Path
 from fivesafe_crate_py import FiveSafesCrate
 from rocrate.model.contextentity import ContextEntity
 
+from toolkits.config.logging import configure_logging
 from toolkits.clients.tes_client import is_tes_message_entity
 
 logging.disable(logging.INFO)
@@ -63,6 +64,10 @@ def main(argv=None):
     """
 
     args = parse_args(argv)
+    
+    logging_level = "DEBUG" if args.verbose else "INFO"
+    configure_logging(logging_level)
+    logger = logging.getLogger(__name__)
 
     # Temporary Fix ===============================
     # The endpoint used in get_project_s3_info is currently 404 not found
@@ -83,9 +88,9 @@ def main(argv=None):
 
     try:
         crate = FiveSafesCrate(args.input_path, version="1.0")
-        print("RO-Crate loaded")
+        logger.info("RO-Crate loaded")
     except (OSError, json.JSONDecodeError, ValueError) as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        logger.error(exc)
         return 1
 
     try:
@@ -96,7 +101,7 @@ def main(argv=None):
             raise ValueError("Multiple TES message candidates found in RO-Crate metadata.")
         tes_msg_entity = matches[0]
     except ValueError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        logger.error(exc)
         return 1
 
     wb = Workbench()
@@ -128,7 +133,7 @@ def main(argv=None):
     else:
         # TODO: In progress or does not exist
         pass
-    print(f"RO-Crate {args.roc_name} created at {args.output_dir}")
+    logger.info(f"RO-Crate {args.roc_name} created at {args.output_dir}")
 
     return 0
 
