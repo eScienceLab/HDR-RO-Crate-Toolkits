@@ -82,6 +82,6 @@ def create_tes_result_crate(crate: FiveSafesCrate, paths_dict: dict, roc_output_
     if result_entities:
         action_properties["result"] = result_entity if len(result_entities) == 1 else result_entities
     action = crate.add(ContextEntity(crate, identifier=action_id, properties=action_properties))
-    crate.root_dataset["mentions"] = [action]
+    crate.root_dataset.append_to("mentions", action)
 
     return crate
