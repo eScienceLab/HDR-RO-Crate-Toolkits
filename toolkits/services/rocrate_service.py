@@ -1,10 +1,57 @@
 import uuid
 
 from fivesafe_crate_py import FiveSafesCrate
-from rocrate.model import ContextEntity
+from rocrate.model import File, ContextEntity
 
-from toolkits.services.tes_service import get_tes_msg_entity
+from toolkits.clients.tes_client import is_tes_message_entity
 
+
+def get_tes_task_id(crate: FiveSafesCrate) -> int:
+    """Returns the TES task ID in the RO-Crate.
+
+    Args:
+        crate: The RO-Crate to extract TES message from.
+
+    Raises:
+        ValueError: If no TES task ID entity is found, or if more than one entity is present.
+    """
+
+    # TODO: Use propertyID (?) to find TES task ID
+
+    entities = crate.data_entities + crate.contextual_entities
+    matches = [entity for entity in entities if entity.type == "PropertyValue"] 
+    if not matches:
+        raise ValueError("No TES task ID found in RO-Crate metadata.")
+    if len(matches) > 1:
+        raise ValueError("Multiple TES task IDs found in RO-Crate metadata.")
+
+    task_id_entity = matches[0]
+    if task_id_entity not in crate.root_dataset["identifier"]:
+        raise ValueError("The Root Data Entity of the RO-Crate metadaty must carry the TES task ID.")
+
+    return int(task_id_entity["value"])
+
+def get_tes_msg_entity(crate: FiveSafesCrate) -> File | ContextEntity:
+    """Return the unique TES message in the RO-Crate.
+
+    Args:
+        crate: The RO-Crate to extract TES message from.
+
+    Returns:
+        The TES message entity, which could be a File instance or a ContextEntity instance.
+    
+    Raises:
+        ValueError: If no TES message entity is found, or if more than one entity is present.
+    """
+
+    entities = crate.data_entities + crate.contextual_entities
+    matches = [entity for entity in entities if is_tes_message_entity(entity.properties())]
+    if not matches:
+        raise ValueError("No TES message found in RO-Crate metadata.")
+    if len(matches) > 1:
+        raise ValueError("Multiple TES message candidates found in RO-Crate metadata.")
+
+    return matches[0]
 
 def create_tes_result_crate(crate: FiveSafesCrate, paths_dict: dict, roc_output_dir) -> FiveSafesCrate:
     """Returns a 5S TES result crate.

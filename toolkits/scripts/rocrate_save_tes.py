@@ -7,19 +7,13 @@ from pathlib import Path
 from fivesafe_crate_py import FiveSafesCrate
 
 from toolkits.config.logging import configure_logging
-from toolkits.services.rocrate_service import create_tes_result_crate
+from toolkits.services.rocrate_service import create_tes_result_crate, get_tes_task_id
 
 def parse_args(argv=None):
     """Parse command-line arguments for the CLI tool."""
 
     parser = argparse.ArgumentParser(
         description="Save TES result in an RO-Crate.",
-    )
-    # TODO: Read task_id from an RO-Crate metadata file and remove this arg
-    parser.add_argument(
-        "task_id",
-        type=int,
-        help="Task ID of the submitted TES task."
     )
     parser.add_argument(
         "input_path",
@@ -96,8 +90,9 @@ def main(argv=None):
     wb = Workbench()
     wb.validate(config_path=args.config_path)
 
+    task_id = get_tes_task_id(crate)
     roc_output_dir = args.output_dir / args.roc_name
-    paths_dict = wb.fetch_outputs(task_id=args.task_id, output_dir=roc_output_dir)
+    paths_dict = wb.fetch_outputs(task_id=task_id, output_dir=roc_output_dir)
 
     if paths_dict:
         try:
