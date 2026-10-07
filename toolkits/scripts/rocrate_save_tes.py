@@ -90,11 +90,18 @@ def main(argv=None):
     wb = Workbench()
     wb.validate(config_path=args.config_path)
 
-    task_id = get_tes_task_id(crate)
+    try:
+        task_id = get_tes_task_id(crate)
+    except ValueError as exc:
+        logger.error(exc)
+        return 1
+
+    # Save outputs at roc_output_dir
     roc_output_dir = args.output_dir / args.roc_name
     paths_dict = wb.fetch_outputs(task_id=task_id, output_dir=roc_output_dir)
 
     if paths_dict:
+        # Create TES result crate
         try:
             crate = create_tes_result_crate(crate, paths_dict, roc_output_dir)
         except ValueError as exc:
@@ -102,8 +109,12 @@ def main(argv=None):
             return 1
         crate.write(roc_output_dir)
     else:
-        # TODO: In progress or does not exist
-        pass
+        # Create TES "task in progress" crate
+        # TODO: Handle "in progress" tasks when function becomes available in workbench
+
+        # Task does not exist
+        logger.error("TES task has no outputs; result RO-Crate was not created.")
+        return 1
 
     logger.info(f"RO-Crate {args.roc_name} created at {args.output_dir}")
 
