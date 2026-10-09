@@ -35,17 +35,19 @@ python3 -m venv <virtual_environment_name>
 python -m pip install -e .
 ```
 
-This installs:
-- the package itself
-- the `rocrate-to-tes` CLI
-- the development dependency `pytest`
-
-
 **NOTE:** For development work you may want to run
 ```
 python -m pip install -e ".[dev]"
 ```
 instead, which also installs the development dependency `pytest`.
+
+This installs:
+- the package itself
+- the `rocrate-to-tes` CLI
+- the `rocrate-tes-fetch` CLI
+- the development dependency `pytest`
+
+Then, install [5s-crate-py](https://github.com/eScienceLab/5s-crate-py) from source.
 
 ### 3. Configure .env
 

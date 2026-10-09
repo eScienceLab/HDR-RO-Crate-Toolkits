@@ -8,3 +8,4 @@ __pycache__/
 *.pyc
 .env
 5s-tes-wb-config.yaml
+tes-result-ro-crate/
