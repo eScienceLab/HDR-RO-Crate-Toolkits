@@ -5,6 +5,7 @@ from rocrate.model import File, ContextEntity, Person
 from rocrate.utils import iso_now
 
 from toolkits.clients.tes_client import is_tes_message_entity
+from toolkits.config.settings import TES_TASK_ID_SCHEMA_ID
 
 
 def get_tes_task_id(crate: FiveSafesCrate) -> int:
@@ -17,18 +18,25 @@ def get_tes_task_id(crate: FiveSafesCrate) -> int:
         ValueError: If no TES task ID entity is found, or if more than one entity is present.
     """
 
-    # TODO: Use propertyID (?) to find TES task ID
-
     entities = crate.data_entities + crate.contextual_entities
-    matches = [entity for entity in entities if entity.type == "PropertyValue"] 
+    matches = [
+        entity for entity in entities 
+        if entity.type == "PropertyValue" and entity["propertyID"] == TES_TASK_ID_SCHEMA_ID
+    ]
     if not matches:
         raise ValueError("No TES task ID found in RO-Crate metadata.")
     if len(matches) > 1:
         raise ValueError("Multiple TES task IDs found in RO-Crate metadata.")
-
     task_id_entity = matches[0]
-    if task_id_entity not in crate.root_dataset["identifier"]:
-        raise ValueError("The Root Data Entity of the RO-Crate metadaty must carry the TES task ID.")
+
+    action_matches = [
+        entity for entity in entities
+        if isinstance(entity.type, list) 
+        and "AskAction" in entity.type and "prov:Activity" in entity.type
+        and task_id_entity == entity["identifier"]
+    ]
+    if not action_matches:
+        raise ValueError("The TES task submission action entity must carry the TES task ID.")
 
     return int(task_id_entity["value"])
 
