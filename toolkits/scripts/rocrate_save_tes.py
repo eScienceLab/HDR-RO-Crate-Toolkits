@@ -3,7 +3,7 @@ import json
 import logging
 
 from pathlib import Path
-# from five_safes_tes_workbench.workbench import Workbench
+from five_safes_tes_workbench.workbench import Workbench
 from fivesafe_crate_py import FiveSafesCrate
 
 from toolkits.config.logging import configure_logging
@@ -44,9 +44,6 @@ def parse_args(argv=None):
         action="store_true",
         help="Increase verbosity",
     )
-    # TODO: Remove the following two arguments with temp fix
-    parser.add_argument("--s3_endpoint", default="http://localhost:9000")
-    parser.add_argument("--s3_output_bucket", required=True)
     return parser.parse_args(argv)
 
 
@@ -62,23 +59,6 @@ def main(argv=None):
     logging_level = "DEBUG" if args.verbose else "INFO"
     configure_logging(logging_level)
     logger = logging.getLogger(__name__)
-
-    # Temporary Fix ===============================
-    # The endpoint used in get_project_s3_info is currently 404 not found
-    # TODO: Remove temporary fix when get_project_s3_info is working,
-    #       which would be when 5S TES deployment version is bumped to 3.2.3
-
-    import five_safes_tes_workbench.helpers.project_s3_info
-    from five_safes_tes_workbench.schema.config_schema import ConfigValidationModel
-    from five_safes_tes_workbench.helpers.project_s3_info import ProjectS3Info
-
-    def patched_get_project_s3_info(project_name: str, config: ConfigValidationModel) -> ProjectS3Info:
-        return ProjectS3Info(output_bucket=args.s3_output_bucket, api_endpoint=args.s3_endpoint)
-    five_safes_tes_workbench.helpers.project_s3_info.get_project_s3_info = patched_get_project_s3_info
-
-    # TODO: Move the following line to the top
-    from five_safes_tes_workbench.workbench import Workbench
-    # End Temporary Fix ===========================
 
     try:
         crate = FiveSafesCrate(args.input_path, version="1.0")
