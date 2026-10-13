@@ -21,7 +21,7 @@ def get_tes_task_id(crate: FiveSafesCrate) -> int:
     entities = crate.data_entities + crate.contextual_entities
     matches = [
         entity for entity in entities 
-        if entity.type == "PropertyValue" and entity["propertyID"] == TES_TASK_ID_SCHEMA_ID
+        if entity.type == "PropertyValue" and entity.get("propertyID") == TES_TASK_ID_SCHEMA_ID
     ]
     if not matches:
         raise ValueError("No TES task ID found in RO-Crate metadata.")
