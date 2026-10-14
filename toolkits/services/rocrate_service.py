@@ -97,7 +97,7 @@ def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafe
         "name": "TES task submission",
         "agent": agent,
         "provider": provider,
-        "endTime": iso_now(),  # TODO: Get end time from workbench/API if possible
+        "endTime": iso_now(),
         "actionStatus": {"@id": "http://schema.org/CompletedActionStatus"},
         "object": tes_msg_entity,
     }
@@ -109,9 +109,11 @@ def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafe
         "@type": "PropertyValue",
         "name": "TES Task ID",
         "value": task_id,
+        "propertyID": TES_TASK_ID_SCHEMA_ID,
+        "url": "https://example.org/tes/v1/tasks/1",  # TODO: Placeholder
     }
     crate_tes_task = crate.add(ContextEntity(crate, identifier=crate_tes_task_id, properties=crate_tes_task_properties))
-    crate.root_dataset.append_to("identifier", crate_tes_task)
+    action.append_to("identifier", crate_tes_task)
     
     crate.root_dataset["dateModified"] = iso_now()
 
