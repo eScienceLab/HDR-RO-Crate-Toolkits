@@ -7,13 +7,11 @@ from pathlib import Path
 from five_safes_tes_workbench.workbench import Workbench
 from five_safes_tes_workbench.common.exceptions.submission_errors import SubmissionError
 from fivesafe_crate_py import FiveSafesCrate
-from rocrate.model.contextentity import ContextEntity
-from rocrate.model.person import Person
-from rocrate.utils import iso_now
 
 from toolkits.config.logging import configure_logging
-from toolkits.clients.tes_client import load_rocrate_metadata, extract_or_load_tes_message, is_tes_message_entity
+from toolkits.clients.tes_client import load_rocrate_metadata, extract_or_load_tes_message
 from toolkits.services.validation_service import is_rocrate_metadata_valid
+from toolkits.services.rocrate_service import create_tes_submission_crate
 
 
 def parse_args(argv=None):
@@ -104,17 +102,6 @@ def main(argv=None):
         logger.error(exc)
         return 1
 
-    try:
-        matches = [entity for entity in crate.data_entities if is_tes_message_entity(entity.properties())]
-        if not matches:
-            raise ValueError("No TES message found in RO-Crate metadata.")
-        if len(matches) > 1:
-            raise ValueError("Multiple TES message candidates found in RO-Crate metadata.")
-        tes_msg_entity = matches[0]
-    except ValueError as exc:
-        logger.error(exc)
-        return 1
-
     wb = Workbench()
     wb.validate(config_path=args.config_path)
 
@@ -126,41 +113,12 @@ def main(argv=None):
         logger.error(exc)
         return 1
 
-    provider_id = "https://ror.org/027m9bs27"  # TODO: Replace with input
-    provider = crate.add(ContextEntity(crate, provider_id, properties={
-        "@type": "Organization",
-        "name": "TRE Provider"
-    }))
-
-    agent_id = "https://orcid.org/0000-0002-1825-0097"  # TODO: Replace with input
-    agent = crate.add(Person(crate, agent_id, properties={
-        "name": "Person Name",
-        "affiliation": provider,
-    }))
-
-    action_id = uuid.uuid4().urn
-    action_properties = {
-        "@type": ["AskAction", "prov:Activity"],
-        "name": "Submit TES task",
-        "agent": agent,
-        "provider": provider,
-        "endTime": iso_now(),
-        "actionStatus": {"@id": "http://schema.org/CompletedActionStatus"},
-        "object": tes_msg_entity,
-    }
-    action = crate.add(ContextEntity(crate, identifier=action_id, properties=action_properties))
-    crate.root_dataset.append_to("mentions", action)
-
-    crate_tes_task_id = uuid.uuid4().urn
-    crate_tes_task_properties = {
-        "@type": "PropertyValue",
-        "name": "TES Task ID",
-        "value": task_id,
-    }
-    crate_tes_task = crate.add(ContextEntity(crate, identifier=crate_tes_task_id, properties=crate_tes_task_properties))
-    crate.root_dataset.append_to("identifier", crate_tes_task)
-
-    crate.root_dataset["dateModified"] = iso_now()
+    # Create TES submission crate
+    try:
+        crate = create_tes_submission_crate(crate, task_id)
+    except ValueError as exc:
+        logger.error(exc)
+        return 1
 
     roc_output_dir = args.output_dir / args.roc_name
     crate.write(roc_output_dir)
