@@ -18,3 +18,8 @@ TES_TASK_SCHEMA_ID = (
     "https://ga4gh.github.io/task-execution-schemas/openapi/"
     "task_execution_service.openapi.yaml#/components/schemas/tesTask"
 )
+
+TES_TASK_ID_SCHEMA_ID = (
+    "https://ga4gh.github.io/task-execution-schemas/openapi/"
+    "task_execution_service.openapi.yaml#/components/schemas/tesTask/properties/id"
+)
