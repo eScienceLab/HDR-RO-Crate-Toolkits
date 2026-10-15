@@ -1,7 +1,6 @@
 import argparse
 import json
 import logging
-import uuid
 
 from pathlib import Path
 from five_safes_tes_workbench.workbench import Workbench
