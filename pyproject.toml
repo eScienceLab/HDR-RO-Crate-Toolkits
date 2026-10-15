@@ -16,7 +16,7 @@ dev = [
 ]
 
 [project.scripts]
-rocrate-to-tes = "toolkits.scripts.rocrate_to_tes:main"
+rocrate-tes-submit = "toolkits.scripts.rocrate_to_tes:main"
 rocrate-tes-fetch = "toolkits.scripts.rocrate_save_tes:main"
 
 [build-system]
