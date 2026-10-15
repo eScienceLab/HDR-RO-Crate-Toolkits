@@ -76,6 +76,49 @@ def add_placeholder_org_and_author(crate):
     }))
     return crate, agent, provider
 
+def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafesCrate:
+    """Returns a 5S TES submission crate.
+    
+    Args:
+        crate: The RO-Crate to add submission information to.
+        task_id: The ID of the successfully submitted task.
+    
+    Returns:
+        A Five Safes RO-Crate
+    """
+
+    crate, agent, provider = add_placeholder_org_and_author(crate)
+
+    tes_msg_entity = get_tes_msg_entity(crate)
+
+    action_id = uuid.uuid4().urn
+    action_properties = {
+        "@type": ["AskAction", "prov:Activity"],
+        "name": "TES task submission",
+        "agent": agent,
+        "provider": provider,
+        "endTime": iso_now(),
+        "actionStatus": {"@id": "http://schema.org/CompletedActionStatus"},
+        "object": tes_msg_entity,
+    }
+    action = crate.add(ContextEntity(crate, identifier=action_id, properties=action_properties))
+    crate.root_dataset.append_to("mentions", action)
+    
+    crate_tes_task_id = uuid.uuid4().urn
+    crate_tes_task_properties = {
+        "@type": "PropertyValue",
+        "name": "TES Task ID",
+        "value": task_id,
+        "propertyID": TES_TASK_ID_SCHEMA_ID,
+        "url": "https://example.org/tes/v1/tasks/1",  # TODO: Placeholder
+    }
+    crate_tes_task = crate.add(ContextEntity(crate, identifier=crate_tes_task_id, properties=crate_tes_task_properties))
+    action.append_to("identifier", crate_tes_task)
+    
+    crate.root_dataset["dateModified"] = iso_now()
+
+    return crate
+
 def create_tes_result_crate(crate: FiveSafesCrate, paths_dict: dict, roc_output_dir) -> FiveSafesCrate:
     """Returns a 5S TES result crate.
 

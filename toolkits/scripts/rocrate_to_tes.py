@@ -2,12 +2,15 @@ import argparse
 import json
 import logging
 
+from pathlib import Path
 from five_safes_tes_workbench.workbench import Workbench
 from five_safes_tes_workbench.common.exceptions.submission_errors import SubmissionError
+from fivesafe_crate_py import FiveSafesCrate
 
 from toolkits.config.logging import configure_logging
 from toolkits.clients.tes_client import load_rocrate_metadata, extract_or_load_tes_message
 from toolkits.services.validation_service import is_rocrate_metadata_valid
+from toolkits.services.rocrate_service import create_tes_submission_crate
 
 
 def parse_args(argv=None):
@@ -30,6 +33,17 @@ def parse_args(argv=None):
         "--config_path",
         required=True,
         help="Path to a Five Safes TES Workbench config YAML file.",
+    )
+    parser.add_argument(
+        "--output_dir",
+        default=Path.cwd(),
+        type=Path,
+        help="Path to the directory to save the submission RO-Crate. Defaults to the current working directory.",
+    )
+    parser.add_argument(
+        "--roc_name",
+        default="tes-submission-ro-crate",
+        help="Name of the RO-Crate. 'tes-submission-ro-crate' by default.",
     )
     parser.add_argument(
         "--disable_roc_validator",
@@ -60,6 +74,7 @@ def main(argv=None):
     logger = logging.getLogger(__name__)
 
     try:
+        crate = FiveSafesCrate(args.input_path, version="1.0")
         crate_metadata = load_rocrate_metadata(args.input_path)
         logger.info("RO-Crate metadata loaded")
     except (OSError, json.JSONDecodeError, ValueError) as exc:
@@ -97,6 +112,16 @@ def main(argv=None):
         logger.error(exc)
         return 1
 
+    # Create TES submission crate
+    try:
+        crate = create_tes_submission_crate(crate, task_id)
+    except ValueError as exc:
+        logger.error(exc)
+        return 1
+
+    roc_output_dir = args.output_dir / args.roc_name
+    crate.write(roc_output_dir)
+    logger.info(f"RO-Crate {args.roc_name} created at {args.output_dir}")
 
     return 0
 

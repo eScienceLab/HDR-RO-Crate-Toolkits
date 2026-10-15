@@ -9,3 +9,4 @@ __pycache__/
 .env
 5s-tes-wb-config.yaml
 tes-result-ro-crate/
+tes-submission-ro-crate/
