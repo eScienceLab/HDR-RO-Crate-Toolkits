@@ -133,7 +133,7 @@ def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafe
         "url": "https://example.org/tes/v1/tasks/1",  # TODO: Placeholder
     }
     crate_tes_task = crate.add(ContextEntity(crate, identifier=crate_tes_task_id, properties=crate_tes_task_properties))
-    action.append_to("identifier", crate_tes_task)
+    action.append_to("identifier", crate_tes_task, compact=True)
     
     crate.root_dataset["dateModified"] = iso_now()
 
