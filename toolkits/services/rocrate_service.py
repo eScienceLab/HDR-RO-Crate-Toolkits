@@ -9,21 +9,13 @@ from toolkits.clients.tes_client import is_tes_message_entity
 from toolkits.config.settings import ROCRATE_METADATA_FILENAME, TES_TASK_ID_SCHEMA_ID
 
 
-def is_valid_crate_path(input_path: Path, output_path: Path) -> bool:
-    """Returns True if output crate will not be nested within the input crate.
+def is_valid_output_rocrate_path(input_path: Path, output_path: Path) -> bool:
+    """Returns True if output crate will not be nested within the input crate."""
 
-    The input path could be a path to an RO-Crate directory, a metadata file or a zip file.
-    """
-
-    if input_path.is_file() and input_path.suffix.lower() == ".zip":
-        return True
-
-    if input_path.is_dir():
-        input_dir = input_path
-    elif input_path.is_file() and input_path.name == ROCRATE_METADATA_FILENAME:
+    if input_path.is_file() and input_path.name == ROCRATE_METADATA_FILENAME:
         input_dir = input_path.parent
     else:
-        return False
+        input_dir = input_path
 
     return not "".join(input_dir.resolve().parts) in "".join(output_path.resolve().parts)
 

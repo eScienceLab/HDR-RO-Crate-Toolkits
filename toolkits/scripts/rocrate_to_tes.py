@@ -10,7 +10,7 @@ from fivesafe_crate_py import FiveSafesCrate
 from toolkits.config.logging import configure_logging
 from toolkits.clients.tes_client import load_rocrate_metadata, extract_or_load_tes_message
 from toolkits.services.validation_service import is_rocrate_metadata_valid
-from toolkits.services.rocrate_service import is_valid_crate_path, create_tes_submission_crate
+from toolkits.services.rocrate_service import is_valid_output_rocrate_path, create_tes_submission_crate
 
 
 def parse_args(argv=None):
@@ -67,10 +67,6 @@ def main(argv=None):
 
     args = parse_args(argv)
 
-    assert is_valid_crate_path(Path(args.input_path), args.output_rocrate), (
-        "The output path cannot be nested in the input path"
-    )
-
     logging_level = "DEBUG" if args.verbose else "INFO"
     configure_logging(logging_level)
     logger = logging.getLogger(__name__)
@@ -82,6 +78,10 @@ def main(argv=None):
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         logger.error(exc)
         return 1
+
+    assert is_valid_output_rocrate_path(Path(args.input_path), args.output_rocrate), (
+        "The output path cannot be nested in the input path"
+    )
 
     if not args.disable_roc_validator:
         try:
