@@ -116,6 +116,7 @@ def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafe
         "name": "TES task submission",
         "agent": agent,
         "provider": provider,
+        "recipient": provider,
         "endTime": iso_now(),
         "actionStatus": {"@id": "http://schema.org/CompletedActionStatus"},
         "object": tes_msg_entity,
