@@ -43,7 +43,7 @@ instead, which also installs the development dependency `pytest`.
 
 This installs:
 - the package itself
-- the `rocrate-to-tes` CLI
+- the `rocrate-tes-submit` CLI
 - the `rocrate-tes-fetch` CLI
 - the development dependency `pytest`
 
@@ -58,7 +58,7 @@ Required variables:
 
 ### 4. Configure the 5S TES Workbench config.yml
 
-Copy the `example-config.yml` from the [5S-TES-Workbench](https://github.com/federated-research/5S-TES-Workbench) repo and update the values. The path to this config file will be used when running the `rocrate-to-tes` command.
+Copy the `example-config.yml` from the [5S-TES-Workbench](https://github.com/federated-research/5S-TES-Workbench) repo and update the values. The path to this config file will be used when running the `rocrate-tes-submit` command.
 
 ### 5. Run the tests
 
@@ -68,21 +68,21 @@ pytest -q
 
 ### 6. Run the tool
 
-The `rocrate-to-tes` command accepts:
+The `rocrate-tes-submit` command accepts:
 - a path to `ro-crate-metadata.json`
 - a path to a directory containing `ro-crate-metadata.json`
 - a path to a ZIP-packaged RO-Crate containing `ro-crate-metadata.json`
 
 ```
-rocrate-to-tes ro-crate-metadata.json --config_path 5s-tes-wb-config.yaml
+rocrate-tes-submit ro-crate-metadata.json --config_path 5s-tes-wb-config.yaml
 ```
 
 Examples:
 
 ```
-rocrate-to-tes /path/to/ro-crate-metadata.json --config_path /path/to/5s-tes-wb-config.yaml
-rocrate-to-tes /path/to/ro-crate-directory --config_path /path/to/5s-tes-wb-config.yaml
-rocrate-to-tes /path/to/ro-crate.zip --config_path /path/to/5s-tes-wb-config.yaml
+rocrate-tes-submit /path/to/ro-crate-metadata.json --config_path /path/to/5s-tes-wb-config.yaml
+rocrate-tes-submit /path/to/ro-crate-directory --config_path /path/to/5s-tes-wb-config.yaml
+rocrate-tes-submit /path/to/ro-crate.zip --config_path /path/to/5s-tes-wb-config.yaml
 ```
 
 ### 7. Expected Output

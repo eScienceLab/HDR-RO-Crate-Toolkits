@@ -1,12 +1,23 @@
 import uuid
 
+from pathlib import Path
 from fivesafe_crate_py import FiveSafesCrate
 from rocrate.model import File, ContextEntity, Person
 from rocrate.utils import iso_now
 
 from toolkits.clients.tes_client import is_tes_message_entity
-from toolkits.config.settings import TES_TASK_ID_SCHEMA_ID
+from toolkits.config.settings import ROCRATE_METADATA_FILENAME, TES_TASK_ID_SCHEMA_ID
 
+
+def is_valid_output_rocrate_path(input_path: Path, output_path: Path) -> bool:
+    """Returns True if output crate will not be nested within the input crate."""
+
+    if input_path.is_file() and input_path.name == ROCRATE_METADATA_FILENAME:
+        input_dir = input_path.parent
+    else:
+        input_dir = input_path
+
+    return not "".join(input_dir.resolve().parts) in "".join(output_path.resolve().parts)
 
 def get_tes_task_id(crate: FiveSafesCrate) -> int:
     """Returns the TES task ID in the RO-Crate.
@@ -75,6 +86,50 @@ def add_placeholder_org_and_author(crate):
         "affiliation": provider,
     }))
     return crate, agent, provider
+
+def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafesCrate:
+    """Returns a 5S TES submission crate.
+    
+    Args:
+        crate: The RO-Crate to add submission information to.
+        task_id: The ID of the successfully submitted task.
+    
+    Returns:
+        A Five Safes RO-Crate
+    """
+
+    crate, agent, provider = add_placeholder_org_and_author(crate)
+
+    tes_msg_entity = get_tes_msg_entity(crate)
+
+    action_id = uuid.uuid4().urn
+    action_properties = {
+        "@type": ["AskAction", "prov:Activity"],
+        "name": "TES task submission",
+        "agent": agent,
+        "provider": provider,
+        "recipient": provider,
+        "endTime": iso_now(),
+        "actionStatus": {"@id": "http://schema.org/CompletedActionStatus"},
+        "object": tes_msg_entity,
+    }
+    action = crate.add(ContextEntity(crate, identifier=action_id, properties=action_properties))
+    crate.root_dataset.append_to("mentions", action)
+    
+    crate_tes_task_id = uuid.uuid4().urn
+    crate_tes_task_properties = {
+        "@type": "PropertyValue",
+        "name": "TES Task ID",
+        "value": task_id,
+        "propertyID": TES_TASK_ID_SCHEMA_ID,
+        "url": "https://example.org/tes/v1/tasks/1",  # TODO: Placeholder
+    }
+    crate_tes_task = crate.add(ContextEntity(crate, identifier=crate_tes_task_id, properties=crate_tes_task_properties))
+    action.append_to("identifier", crate_tes_task, compact=True)
+    
+    crate.root_dataset["dateModified"] = iso_now()
+
+    return crate
 
 def create_tes_result_crate(crate: FiveSafesCrate, paths_dict: dict, roc_output_dir) -> FiveSafesCrate:
     """Returns a 5S TES result crate.
