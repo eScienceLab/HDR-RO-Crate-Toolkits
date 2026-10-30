@@ -121,8 +121,12 @@ def main(argv=None):
         logger.error(exc)
         return 1
 
-    crate.write(args.output_rocrate)
-    logger.info(f"RO-Crate {args.output_rocrate.name} created at {args.output_rocrate.parent}")
+    try:
+        crate.write(args.output_rocrate)
+        logger.info(f"RO-Crate {args.output_rocrate.name} created at {args.output_rocrate.parent}")
+    except OSError as exc:
+        logger.error(f"RO-Crate {args.output_rocrate.name} could not be saved to {args.output_rocrate.parent}: {exc}")
+        return 1
 
     return 0
 
