@@ -35,15 +35,13 @@ def parse_args(argv=None):
         help="Path to a Five Safes TES Workbench config YAML file.",
     )
     parser.add_argument(
-        "--output_dir",
-        default=Path.cwd(),
+        "--output_rocrate",
+        default=Path.cwd() / "tes-submission-ro-crate",
         type=Path,
-        help="Path to the directory to save the submission RO-Crate. Defaults to the current working directory.",
-    )
-    parser.add_argument(
-        "--roc_name",
-        default="tes-submission-ro-crate",
-        help="Name of the RO-Crate. 'tes-submission-ro-crate' by default.",
+        help=(
+            "Path to the submission RO-Crate. "
+            "Defaults to 'tes-submission-ro-crate' in the current working directory."
+        ),
     )
     parser.add_argument(
         "--disable_roc_validator",
@@ -119,9 +117,8 @@ def main(argv=None):
         logger.error(exc)
         return 1
 
-    roc_output_dir = args.output_dir / args.roc_name
-    crate.write(roc_output_dir)
-    logger.info(f"RO-Crate {args.roc_name} created at {args.output_dir}")
+    crate.write(args.output_rocrate)
+    logger.info(f"RO-Crate {args.output_rocrate.name} created at {args.output_rocrate.parent}")
 
     return 0
 
