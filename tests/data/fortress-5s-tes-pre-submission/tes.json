@@ -1,0 +1,29 @@
+{
+  "state": 0,
+  "name": "NW Wrapper",
+  "inputs": [],
+  "outputs": [
+    {
+      "name": "Std",
+      "description": "Std results",
+      "url": "s3://",
+      "path": "/outputs",
+      "type": "DIRECTORY"
+    }
+  ],
+  "executors": [
+    {
+      "image": "tes_nw_wrapper:latest",
+      "command": ["/opt/venv/bin/python", "/app/NWCyberComm/nw_wrapper.py", "--scripts-path", "/app/NWCyberComm", "-h"],
+      "stdout": "/outputs/nw_wrapper_out.txt",
+      "stderr": "/outputs/nw_wrapper_err.txt"
+    }
+  ],
+  "volumes": null,
+  "tags": {
+    "project": "Testing",
+    "tres": "DEMO"
+  },
+  "logs": null,
+  "creation_time": null
+}
