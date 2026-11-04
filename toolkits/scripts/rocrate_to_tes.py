@@ -10,7 +10,7 @@ from fivesafe_crate_py import FiveSafesCrate
 from toolkits.config.logging import configure_logging
 from toolkits.clients.tes_client import load_rocrate_metadata, extract_or_load_tes_message
 from toolkits.services.validation_service import is_rocrate_metadata_valid
-from toolkits.services.rocrate_service import create_tes_submission_crate
+from toolkits.services.rocrate_service import is_valid_output_rocrate_path, create_tes_submission_crate
 
 
 def parse_args(argv=None):
@@ -35,15 +35,13 @@ def parse_args(argv=None):
         help="Path to a Five Safes TES Workbench config YAML file.",
     )
     parser.add_argument(
-        "--output_dir",
-        default=Path.cwd(),
+        "--output_rocrate",
+        default=Path.cwd() / "tes-submission-ro-crate",
         type=Path,
-        help="Path to the directory to save the submission RO-Crate. Defaults to the current working directory.",
-    )
-    parser.add_argument(
-        "--roc_name",
-        default="tes-submission-ro-crate",
-        help="Name of the RO-Crate. 'tes-submission-ro-crate' by default.",
+        help=(
+            "Path to the submission RO-Crate. "
+            "Defaults to 'tes-submission-ro-crate' in the current working directory."
+        ),
     )
     parser.add_argument(
         "--disable_roc_validator",
@@ -80,6 +78,10 @@ def main(argv=None):
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         logger.error(exc)
         return 1
+
+    assert is_valid_output_rocrate_path(Path(args.input_path), args.output_rocrate), (
+        "The output path cannot be nested in the input path"
+    )
 
     if not args.disable_roc_validator:
         try:
@@ -119,9 +121,12 @@ def main(argv=None):
         logger.error(exc)
         return 1
 
-    roc_output_dir = args.output_dir / args.roc_name
-    crate.write(roc_output_dir)
-    logger.info(f"RO-Crate {args.roc_name} created at {args.output_dir}")
+    try:
+        crate.write(args.output_rocrate)
+        logger.info(f"RO-Crate {args.output_rocrate.name} created at {args.output_rocrate.parent}")
+    except OSError as exc:
+        logger.error(f"RO-Crate {args.output_rocrate.name} could not be saved to {args.output_rocrate.parent}: {exc}")
+        return 1
 
     return 0
 
