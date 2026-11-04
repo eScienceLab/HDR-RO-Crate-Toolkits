@@ -8,6 +8,13 @@ from toolkits.clients.tes_client import is_tes_message_entity
 from toolkits.config.settings import TES_TASK_ID_SCHEMA_ID
 
 
+def _as_list(value) -> list:
+    """Normalise a single-or-multi-valued RO-Crate property to a list."""
+    if value is None:
+        return []
+    return value if isinstance(value, list) else [value]
+
+
 def get_tes_task_id(crate: FiveSafesCrate) -> int:
     """Returns the TES task ID in the RO-Crate.
 
@@ -33,7 +40,7 @@ def get_tes_task_id(crate: FiveSafesCrate) -> int:
         entity for entity in entities
         if isinstance(entity.type, list) 
         and "AskAction" in entity.type and "prov:Activity" in entity.type
-        and task_id_entity == entity["identifier"]
+        and task_id_entity in _as_list(entity.get("identifier"))
     ]
     if not action_matches:
         raise ValueError("The TES task submission action entity must carry the TES task ID.")
