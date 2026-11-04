@@ -17,9 +17,9 @@ fi
 [ -d .venv ] || { echo "==> Creating .venv"; python3 -m venv .venv; }
 
 echo "==> Installing toolkit"
-.venv/bin/pip install -q -e ".[dev]"
+.venv/bin/pip install -q --disable-pip-version-check -e ".[dev]"
 echo "==> Installing 5s-crate-py"
-.venv/bin/pip install -q "git+https://github.com/eScienceLab/5s-crate-py"
+.venv/bin/pip install -q --disable-pip-version-check "git+https://github.com/eScienceLab/5s-crate-py"
 
 if [ ! -f .env ]; then
     cp env.template .env && echo "==> Created .env"
