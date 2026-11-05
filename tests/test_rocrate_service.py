@@ -208,6 +208,12 @@ def test_resolve_metadata_path_rejects_directory_with_no_metadata(tmp_path):
     with pytest.raises(ValueError, match=f"RO-Crate metadata file not found at: {crate_dir}"):
         resolve_metadata_path(crate_dir)
 
+def test_resolve_metadata_path(tmp_path):
+    metadata_path = tmp_path / ROCRATE_METADATA_FILENAME
+    metadata_path.write_text("{\"name\": \"Hello World\"}")
+
+    assert resolve_metadata_path(metadata_path) == metadata_path
+
 @pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.name}")
 def test_resolve_metadata_path_accepts_rocrate_directory(tmp_path, dir):
     # A crate directory should resolve to its embedded metadata JSON file.
