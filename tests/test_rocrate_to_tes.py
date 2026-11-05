@@ -12,16 +12,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from toolkits.config.settings import ROCRATE_METADATA_FILENAME, TES_TASK_SCHEMA_ID
 
-from toolkits.clients.tes_client import (
+from toolkits.services.rocrate_service import load_rocrate_metadata, resolve_metadata_path
+from toolkits.services.tes_service import (
     conforms_to_tes_task_schema,
     is_creative_work,
     is_file_type,
     is_tes_message_entity,
-    load_rocrate_metadata,
     load_tes_message,
     extract_or_load_tes_message,
     is_tes_payload,
-    resolve_metadata_path,
 )
 
 from toolkits.scripts.rocrate_to_tes import main
@@ -84,7 +83,7 @@ def test_resolve_metadata_path_rejects_invalid_path(tmp_path, monkeypatch):
     crate_dir = tmp_path / "crate"
     crate_dir.mkdir()
     monkeypatch.setattr(
-        "toolkits.clients.tes_client.Path.is_dir",
+        "toolkits.services.tes_service.Path.is_dir",
         lambda path: False
     )
 
@@ -228,7 +227,7 @@ def test_is_tes_payload_rejects_single_executor_object():
 
     assert is_tes_payload(payload) is False
 
-@patch("toolkits.clients.tes_client.urlopen")
+@patch("toolkits.services.tes_service.urlopen")
 def test_load_tes_message_from_web(mock_urlopen, tmp_path):
     crate_dir = tmp_path / "crate"
     shutil.copytree(FIXTURE_DIRS[1], crate_dir)
@@ -241,7 +240,7 @@ def test_load_tes_message_from_web(mock_urlopen, tmp_path):
 
     assert tes_message["name"] == "Hello World"
 
-@patch("toolkits.clients.tes_client.urlopen")
+@patch("toolkits.services.tes_service.urlopen")
 def test_load_tes_message_from_web_failed(mock_urlopen, tmp_path):
     crate_dir = tmp_path / "crate"
     shutil.copytree(FIXTURE_DIRS[1], crate_dir)
@@ -286,7 +285,7 @@ def test_load_tes_message_rejects_invalid_path(tmp_path, monkeypatch):
     crate_dir = tmp_path / "crate"
     crate_dir.mkdir()
     monkeypatch.setattr(
-        "toolkits.clients.tes_client.Path.is_dir",
+        "toolkits.services.tes_service.Path.is_dir",
         lambda path: False
     )
 
