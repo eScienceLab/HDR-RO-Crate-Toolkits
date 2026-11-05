@@ -14,5 +14,6 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -e ".[dev]"
+          python3 -m pip install "git+https://github.com/eScienceLab/5s-crate-py"
       - name: Run test
         run: pytest

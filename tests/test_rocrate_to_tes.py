@@ -372,9 +372,9 @@ def test_extract_or_load_tes_message_rejects_invalid_tes_payload_after_selection
         extract_or_load_tes_message(crate_metadata, "")
 
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
-def test_main_prints_extracted_message(capsys, mock_wb_config, mock_clients, metadata_path):
+def test_main_prints_extracted_message(tmp_path, capsys, mock_wb_config, mock_clients, metadata_path):
     # The CLI should emit the extracted TES message as JSON on stdout.
-    exit_code = main([str(metadata_path), "--config_path", mock_wb_config, "-v"])
+    exit_code = main([str(metadata_path), "--config_path", mock_wb_config, "--output_rocrate", str(tmp_path / "output-crate"), "-v"])
 
     captured = capsys.readouterr()
     output = captured.out
@@ -384,8 +384,8 @@ def test_main_prints_extracted_message(capsys, mock_wb_config, mock_clients, met
     assert  '"executors": [\n    {\n      "image": "ubuntu"' in output
 
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
-def test_main_less_verbose(capsys, mock_wb_config, mock_clients, metadata_path):
-    exit_code = main([str(metadata_path), "--config_path", mock_wb_config])
+def test_main_less_verbose(tmp_path, capsys, mock_wb_config, mock_clients, metadata_path):
+    exit_code = main([str(metadata_path), "--config_path", mock_wb_config, "--output_rocrate", str(tmp_path / "output-crate")])
 
     captured = capsys.readouterr()
     output = captured.out
@@ -396,8 +396,8 @@ def test_main_less_verbose(capsys, mock_wb_config, mock_clients, metadata_path):
     assert  "Submitted task ID: 1" in output
 
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
-def test_main_no_roc_validation(capsys, mock_wb_config, mock_clients, metadata_path):
-    exit_code = main([str(metadata_path), "--config_path", mock_wb_config, "--disable_roc_validator"])
+def test_main_no_roc_validation(tmp_path, capsys, mock_wb_config, mock_clients, metadata_path):
+    exit_code = main([str(metadata_path), "--config_path", mock_wb_config, "--output_rocrate", str(tmp_path / "output-crate"), "--disable_roc_validator"])
 
     captured = capsys.readouterr()
     output = captured.out
@@ -412,7 +412,7 @@ def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_wb_config, mock_c
     crate_dir = tmp_path / "crate"
     shutil.copytree(dir, crate_dir)
 
-    exit_code = main([str(crate_dir), "--config_path", mock_wb_config, "-v"])
+    exit_code = main([str(crate_dir), "--config_path", mock_wb_config, "--output_rocrate", str(tmp_path / "output-crate"), "-v"])
 
     captured = capsys.readouterr()
     output = captured.out
@@ -429,7 +429,7 @@ def test_main_accepts_rocrate_zip_archive(tmp_path, capsys, mock_wb_config, mock
             if file.is_file():
                 zip_file.write(file, arcname=file.relative_to(dir))
 
-    exit_code = main([str(archive_path), "--config_path", mock_wb_config, "-v"])
+    exit_code = main([str(archive_path), "--config_path", mock_wb_config, "--output_rocrate", str(tmp_path / "output-crate"), "-v"])
 
     captured = capsys.readouterr()
     output = captured.out
