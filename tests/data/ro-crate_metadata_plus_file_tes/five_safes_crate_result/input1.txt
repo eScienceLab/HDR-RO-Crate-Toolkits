@@ -1,0 +1,1 @@
+Placeholder input file referenced by ro-crate-metadata.json.
