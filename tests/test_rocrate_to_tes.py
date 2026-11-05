@@ -28,8 +28,8 @@ from toolkits.scripts.rocrate_to_tes import main
 
 
 FIXTURE_DIRS = [
-    Path(__file__).parent / "data" / "ro-crate_metadata_plus_tes" / "five_safes_crate_result",
-    Path(__file__).parent / "data" / "ro-crate_metadata_plus_file_tes" / "five_safes_crate_result",
+    Path(__file__).parent / "data" / "embedded-5s-tes-pre-submission",
+    Path(__file__).parent / "data" / "5s-tes-pre-submission",
 ]
 FIXTURE_METADATA_PATHS = [dir / ROCRATE_METADATA_FILENAME for dir in FIXTURE_DIRS]
 
@@ -54,9 +54,6 @@ def mock_wb_config(tmp_path):
         config:
           project: "Testing"
           tes_base_url: "https://submission.layer.api"
-          minio_sts_endpoint: "https://minio.api/sts"
-          minio_endpoint: "https://minio.api"
-          minio_output_bucket: "11111outputtre"
           tres:
             - "DEMO"
         auth:
@@ -124,7 +121,7 @@ def test_load_rocrate_metadata_from_rocrate_directory(tmp_path, dir):
 
     crate_metadata = load_rocrate_metadata(crate_dir)
 
-    assert crate_metadata["@graph"][1]["name"] == "5-Safe RO-Crate Result"
+    assert crate_metadata["@graph"][0]["name"] == "Hello World TES Task"
 
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
 def test_load_rocrate_metadata_from_zip_archive(tmp_path, metadata_path):
@@ -135,7 +132,7 @@ def test_load_rocrate_metadata_from_zip_archive(tmp_path, metadata_path):
 
     crate_metadata = load_rocrate_metadata(archive_path)
 
-    assert crate_metadata["@graph"][1]["name"] == "5-Safe RO-Crate Result"
+    assert crate_metadata["@graph"][0]["name"] == "Hello World TES Task"
 
 def test_load_rocrate_metadata_rejects_zip_archive_with_no_metadata(tmp_path):
     archive_path = tmp_path / "crate.zip"
