@@ -29,7 +29,7 @@ FIXTURE_DIRS = [
 FIXTURE_METADATA_PATHS = [dir / ROCRATE_METADATA_FILENAME for dir in FIXTURE_DIRS]
 
 
-@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
+@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.name}")
 def test_extract_or_load_tes_message_from_fixture(metadata_path):
     # The sample RO-Crate fixtures should yield the embedded or file TES task payload.
     crate_metadata = json.loads(metadata_path.read_text(encoding="utf-8"))

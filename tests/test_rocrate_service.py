@@ -43,7 +43,7 @@ def test_resolve_metadata_path_rejects_directory_with_no_metadata(tmp_path):
     with pytest.raises(ValueError, match=f"RO-Crate metadata file not found at: {crate_dir}"):
         resolve_metadata_path(crate_dir)
 
-@pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.parent.name}")
+@pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.name}")
 def test_resolve_metadata_path_accepts_rocrate_directory(tmp_path, dir):
     # A crate directory should resolve to its embedded metadata JSON file.
     crate_dir = tmp_path / "crate"
@@ -52,7 +52,7 @@ def test_resolve_metadata_path_accepts_rocrate_directory(tmp_path, dir):
 
     assert resolve_metadata_path(crate_dir) == metadata_path
 
-@pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.parent.name}")
+@pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.name}")
 def test_load_rocrate_metadata_from_rocrate_directory(tmp_path, dir):
     # Metadata loading should work when the input is the crate root directory.
     crate_dir = tmp_path / "crate"
@@ -62,7 +62,7 @@ def test_load_rocrate_metadata_from_rocrate_directory(tmp_path, dir):
 
     assert crate_metadata["@graph"][0]["name"] == "Hello World TES Task"
 
-@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.parent.name}")
+@pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.name}")
 def test_load_rocrate_metadata_from_zip_archive(tmp_path, metadata_path):
     # Metadata loading should also work from a ZIP-packaged RO-Crate.
     archive_path = tmp_path / "crate.zip"
