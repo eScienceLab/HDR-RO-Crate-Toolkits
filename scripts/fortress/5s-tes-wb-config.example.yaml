@@ -1,0 +1,26 @@
+# Five Safes TES Workbench config for the 5S-TES DemoStack.
+# Copy to the repository root as 5s-tes-wb-config.yaml (git-ignored) and fill in client_secret.
+
+config:
+  project: "Testing"
+  tes_base_url: "http://localhost:5034"
+  tres:
+    - "DEMO"
+
+auth:
+  # Keycloak credentials. The Workbench fetches its own tokens, including the
+  # ID token RustFS needs for rocrate-tes-fetch. client_secret is the "secret"
+  # of the Dare-Control-API client in
+  # 5S-TES-Deployment/DemoStack/config/realm-config/sub-layer.json.
+  # Use keycloak.localtest.me, not localhost: the token issuer must match the
+  # Keycloak URL RustFS is configured with.
+  client_id: "Dare-Control-API"
+  client_secret: "PASTE-CLIENT-SECRET-HERE"
+  username: "globaladminuser"
+  password: "password123"
+  keycloak_url: "http://keycloak.localtest.me:8085"
+
+  # Alternative: an access token copied from the Submission Layer. This works
+  # for rocrate-tes-submit but NOT for rocrate-tes-fetch, because RustFS
+  # rejects the token's extra audiences. If set, it overrides the credentials.
+  # access_token: "PASTE-TOKEN-HERE"
