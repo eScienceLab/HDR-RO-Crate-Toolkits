@@ -146,7 +146,6 @@ def test_load_tes_message_from_web_failed(mock_urlopen, tmp_path):
 
     mock_urlopen.side_effect = HTTPError(url=url, code=404, msg="Not Found", hdrs=None, fp=None)
 
-
     with pytest.raises(ValueError, match=f"Unable to load TES message file from: {url}"):
         load_tes_message(crate_dir, url)
 
@@ -155,6 +154,15 @@ def test_load_tes_message_rejects_non_existent_path(tmp_path):
 
     with pytest.raises(ValueError, match=f"Input path does not exist: {crate_dir}"):
         load_tes_message(crate_dir, "tes.json")
+
+def test_load_tes_message_from_zip_archive(tmp_path):
+    archive_path = tmp_path / "crate.zip"
+    with ZipFile(archive_path, "w") as zip_file:
+        zip_file.writestr("tes.json", "{\"name\": \"Hello World\"}")
+
+    tes_message = load_tes_message(archive_path, "tes.json")
+
+    assert tes_message["name"] == "Hello World"
 
 def test_load_tes_message_rejects_zip_archive_with_no_tes_file(tmp_path):
     archive_path = tmp_path / "crate.zip"
