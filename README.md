@@ -92,7 +92,7 @@ If the tool runs successfully it should print the following information to the t
 - The TES message, as formatted JSON
 - The 5S-TES response message, as formatted JSON, which contains the project and task ID's.
 
-Both commands accept `-v`/`--verbose` to show debug messages, or `-q`/`--quiet` to show only warnings and errors. The two options cannot be used together.
+Both commands accept `-v`/`--verbose` to show debug messages and the Five Safes TES Workbench's progress messages, or `-q`/`--quiet` to show only warnings and errors. The two options cannot be used together.
 
 ### 8. Exit codes
 

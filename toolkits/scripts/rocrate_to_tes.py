@@ -113,15 +113,18 @@ def main(argv=None):
     try:
         tes_message = extract_or_load_tes_message(crate_metadata, args.input_path)
         logger.debug("TES message: \n%s", json.dumps(tes_message, indent=2))
-    except ValueError as exc:
+    except (OSError, ValueError) as exc:
+        # OSError: a TES file referenced from ro-crate-metadata.json is missing or unreadable
         logger.error(exc)
         return ExitCode.INPUT_ERROR
 
     wb = Workbench()
     try:
-        # Raises FileNotFoundError, yaml.YAMLError or pydantic.ValidationError (a ValueError)
+        # Raises FileNotFoundError, yaml.YAMLError, pydantic.ValidationError (a ValueError)
+        # or a WorkbenchError subclass
         wb.validate(config_path=args.config_path)
-    except (OSError, yaml.YAMLError, ValueError) as exc:
+    except (OSError, yaml.YAMLError, ValueError, WorkbenchError) as exc:
+        # WorkbenchError: ConfigValidationError/AuthValidationError for missing or empty values
         logger.error(f"Invalid Workbench config {args.config_path}: {exc}")
         return ExitCode.INPUT_ERROR
 
@@ -137,7 +140,10 @@ def main(argv=None):
         crate = create_tes_submission_crate(crate, task_id)
         crate.write(args.output_rocrate)
     except (OSError, ValueError) as exc:
-        logger.error(f"RO-Crate {args.output_rocrate.name} could not be saved to {args.output_rocrate.parent}: {exc}")
+        logger.error(
+            f"TES task {task_id} was submitted, but RO-Crate {args.output_rocrate.name} "
+            f"could not be saved to {args.output_rocrate.parent}: {exc}"
+        )
         return ExitCode.OUTPUT_ERROR
 
     logger.info(f"RO-Crate {args.output_rocrate.name} created at {args.output_rocrate.parent}")

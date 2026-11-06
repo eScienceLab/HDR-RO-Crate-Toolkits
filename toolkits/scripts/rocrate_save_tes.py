@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 
+import requests
 import yaml
 from botocore.exceptions import BotoCoreError, ClientError
 from pathlib import Path
@@ -87,9 +88,11 @@ def main(argv=None):
 
     wb = Workbench()
     try:
-        # Raises FileNotFoundError, yaml.YAMLError or pydantic.ValidationError (a ValueError)
+        # Raises FileNotFoundError, yaml.YAMLError, pydantic.ValidationError (a ValueError)
+        # or a WorkbenchError subclass
         wb.validate(config_path=args.config_path)
-    except (OSError, yaml.YAMLError, ValueError) as exc:
+    except (OSError, yaml.YAMLError, ValueError, WorkbenchError) as exc:
+        # WorkbenchError: ConfigValidationError/AuthValidationError for missing or empty values
         logger.error(f"Invalid Workbench config {args.config_path}: {exc}")
         return ExitCode.INPUT_ERROR
 
@@ -97,11 +100,20 @@ def main(argv=None):
     roc_output_dir = args.output_dir / args.roc_name
     try:
         # fetch_outputs raises untyped errors from its auth/STS/S3 helpers,
-        # not WorkbenchError subclasses; OSError covers requests' HTTP errors.
+        # not WorkbenchError subclasses.
         paths_dict = wb.fetch_outputs(task_id=task_id, output_dir=roc_output_dir)
-    except (WorkbenchError, ValueError, RuntimeError, OSError, ClientError, BotoCoreError) as exc:
+    except (
+        requests.RequestException, ConnectionError, TimeoutError,
+        WorkbenchError, ValueError, RuntimeError, ClientError, BotoCoreError,
+    ) as exc:
+        # requests' errors and the builtin ConnectionError/TimeoutError (e.g. a dropped S3
+        # download stream) subclass OSError, so they must be caught before local OSErrors below
         logger.error(f"Could not fetch outputs for TES task {task_id}: {exc}")
         return ExitCode.SERVICE_ERROR
+    except OSError as exc:
+        # Creating directories or writing downloaded files under the output directory failed
+        logger.error(f"Could not save outputs for TES task {task_id} to {roc_output_dir}: {exc}")
+        return ExitCode.OUTPUT_ERROR
 
     # fetch_outputs returns {} when no task has completed, and {tre: []} when a
     # completed task produced no files
