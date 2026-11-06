@@ -1,7 +1,9 @@
+import logging
 import shutil
 from pathlib import Path
 
 import pytest
+import requests
 from botocore.exceptions import ClientError
 
 from toolkits.config.exit_codes import ExitCode
@@ -64,6 +66,12 @@ def test_main_missing_input_returns_input_error(tmp_path, mock_wb_config):
     assert exit_code == ExitCode.INPUT_ERROR
 
 
+def test_main_workbench_rejected_config_returns_input_error(tmp_path, submission_crate, invalid_wb_config):
+    exit_code = _run_main(submission_crate, invalid_wb_config, tmp_path / "out")
+
+    assert exit_code == ExitCode.INPUT_ERROR
+
+
 def test_main_missing_workbench_config_returns_input_error(tmp_path, submission_crate):
     exit_code = _run_main(submission_crate, tmp_path / "missing.yaml", tmp_path / "out")
 
@@ -76,8 +84,14 @@ def test_main_missing_workbench_config_returns_input_error(tmp_path, submission_
         RuntimeError("Child task not found"),
         ValueError("No project S3 info found"),
         ClientError({"Error": {"Code": "AccessDenied"}}, "GetObject"),
+        requests.ConnectionError("Connection refused"),
+        ConnectionResetError("Connection reset by peer"),
+        TimeoutError("timed out"),
     ],
-    ids=["runtime_error", "value_error", "s3_client_error"],
+    ids=[
+        "runtime_error", "value_error", "s3_client_error", "requests_connection_error",
+        "connection_reset", "timeout",
+    ],
 )
 def test_main_fetch_failure_returns_service_error(tmp_path, submission_crate, mock_wb_config, monkeypatch, error):
     def fake_fetch(self, task_id, output_dir):
@@ -87,6 +101,60 @@ def test_main_fetch_failure_returns_service_error(tmp_path, submission_crate, mo
     exit_code = _run_main(submission_crate, mock_wb_config, tmp_path / "out")
 
     assert exit_code == ExitCode.SERVICE_ERROR
+
+
+@pytest.mark.parametrize(
+    "error",
+    [PermissionError("Permission denied"), OSError(28, "No space left on device")],
+    ids=["permission_denied", "disk_full"],
+)
+def test_main_local_fetch_write_failure_returns_output_error(tmp_path, submission_crate, mock_wb_config, monkeypatch, error):
+    def fake_fetch(self, task_id, output_dir):
+        raise error
+    _mock_fetch_outputs(monkeypatch, fake_fetch)
+
+    exit_code = _run_main(submission_crate, mock_wb_config, tmp_path / "out")
+
+    assert exit_code == ExitCode.OUTPUT_ERROR
+
+
+def test_main_output_dir_is_a_file_returns_output_error(tmp_path, submission_crate, mock_wb_config, monkeypatch):
+    def fake_fetch(self, task_id, output_dir):
+        # Mimics fetch_outputs creating the result directory before downloading
+        output_dir.mkdir(parents=True, exist_ok=True)
+        return {"DEMO": []}
+    _mock_fetch_outputs(monkeypatch, fake_fetch)
+    output_dir = tmp_path / "out"
+    output_dir.write_text("not a directory")
+
+    exit_code = _run_main(submission_crate, mock_wb_config, output_dir)
+
+    assert exit_code == ExitCode.OUTPUT_ERROR
+
+
+@pytest.mark.parametrize(
+    "flag, info_shown",
+    [(["-v"], True), ([], False), (["-q"], False)],
+    ids=["verbose", "default", "quiet"],
+)
+def test_main_workbench_logs_follow_verbosity(tmp_path, capsys, submission_crate, mock_wb_config, monkeypatch, flag, info_shown):
+    # Workbench loggers have their own handlers and don't propagate, so they must be
+    # routed through the CLI's logging configuration. Their INFO messages are only
+    # shown with -v; warnings always go to stderr.
+    workbench_logger = logging.getLogger("five_safes_tes_workbench.helpers.s3")
+
+    def fake_fetch(self, task_id, output_dir):
+        workbench_logger.info("Workbench info message")
+        workbench_logger.warning("Workbench warning message")
+        return {}
+    _mock_fetch_outputs(monkeypatch, fake_fetch)
+
+    main([str(submission_crate), "--config_path", str(mock_wb_config), "--output_dir", str(tmp_path / "out"), *flag])
+
+    captured = capsys.readouterr()
+    assert ("Workbench info message" in captured.out) is info_shown
+    assert "Workbench warning message" in captured.err
+    assert "Workbench warning message" not in captured.out
 
 
 @pytest.mark.parametrize("paths_dict", [{}, {"DEMO": []}], ids=["no_completed_tasks", "completed_no_files"])

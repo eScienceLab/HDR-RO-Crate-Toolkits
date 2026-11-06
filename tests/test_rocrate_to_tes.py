@@ -451,6 +451,18 @@ def test_main_missing_input_returns_input_error(tmp_path, mock_wb_config, mock_c
     assert exit_code == ExitCode.INPUT_ERROR
 
 
+def test_main_missing_referenced_tes_file_returns_input_error(tmp_path, capsys, mock_wb_config, mock_clients):
+    # A metadata file path whose referenced tes.json is missing should not crash with a traceback.
+    crate_dir = tmp_path / "crate"
+    shutil.copytree(FIXTURE_DIRS[1], crate_dir)
+    (crate_dir / "tes.json").unlink()
+
+    exit_code = _run_main(crate_dir / ROCRATE_METADATA_FILENAME, mock_wb_config, tmp_path / "output-crate")
+
+    assert exit_code == ExitCode.INPUT_ERROR
+    assert "tes.json" in capsys.readouterr().err
+
+
 def test_main_nested_output_returns_output_error(tmp_path, mock_wb_config, mock_clients):
     crate_dir = tmp_path / "crate"
     shutil.copytree(FIXTURE_DIRS[0], crate_dir)
@@ -503,6 +515,12 @@ def test_main_submission_failure_returns_service_error(tmp_path, mock_wb_config,
     assert exit_code == ExitCode.SERVICE_ERROR
 
 
+def test_main_workbench_rejected_config_returns_input_error(tmp_path, mock_clients, invalid_wb_config):
+    exit_code = _run_main(FIXTURE_METADATA_PATHS[0], invalid_wb_config, tmp_path / "output-crate")
+
+    assert exit_code == ExitCode.INPUT_ERROR
+
+
 def test_main_write_failure_returns_output_error(tmp_path, mock_wb_config, mock_clients, monkeypatch):
     def raise_os_error(self, path):
         raise OSError("disk full")
@@ -511,3 +529,20 @@ def test_main_write_failure_returns_output_error(tmp_path, mock_wb_config, mock_
     exit_code = _run_main(FIXTURE_METADATA_PATHS[0], mock_wb_config, tmp_path / "output-crate")
 
     assert exit_code == ExitCode.OUTPUT_ERROR
+
+
+def test_main_write_failure_reports_submitted_task_id_in_quiet_mode(tmp_path, capsys, mock_wb_config, mock_clients, monkeypatch):
+    # The task has already been submitted, so its ID must be visible even with -q,
+    # otherwise the user can't fetch its results and may submit it again.
+    def raise_os_error(self, path):
+        raise PermissionError("Permission denied")
+    monkeypatch.setattr("fivesafe_crate_py.FiveSafesCrate.write", raise_os_error)
+
+    exit_code = main([
+        str(FIXTURE_METADATA_PATHS[0]), "--config_path", mock_wb_config,
+        "--output_rocrate", str(tmp_path / "output-crate"), "-q",
+    ])
+
+    captured = capsys.readouterr()
+    assert exit_code == ExitCode.OUTPUT_ERROR
+    assert "TES task 1 was submitted" in captured.err
