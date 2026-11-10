@@ -21,9 +21,6 @@ def is_valid_output_rocrate_path(input_path: Path, output_path: Path) -> bool:
 
 def _as_list(value) -> list:
     """Return a property value as a list, since JSON-LD allows a single value or a list."""
-
-    if value is None:
-        return []
     return value if isinstance(value, list) else [value]
 
 def get_tes_task_id(crate: FiveSafesCrate) -> int:
