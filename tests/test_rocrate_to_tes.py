@@ -54,8 +54,8 @@ def test_main_prints_extracted_message(tmp_path, capsys, mock_wb_config, mock_cl
     output = captured.out
 
     assert exit_code == 0
-    assert '"name": "Hello World"' in output
-    assert  '"executors": [\n    {\n      "image": "ubuntu"' in output
+    assert "DEBUG" in output
+    assert '"executors": [\n    {\n      "image": "ubuntu"' in output
 
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.name}")
 def test_main_less_verbose(tmp_path, capsys, mock_wb_config, mock_clients, metadata_path):
@@ -65,9 +65,9 @@ def test_main_less_verbose(tmp_path, capsys, mock_wb_config, mock_clients, metad
     output = captured.out
 
     assert exit_code == 0
-    assert '"name": "Hello World"' not in output
-    assert  "RO-Crate metadata validation successful" in output
-    assert  "Submitted task ID: 1" in output
+    assert "DEBUG" not in output
+    assert "RO-Crate metadata validation successful" in output
+    assert "Submitted task ID: 1" in output
 
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.name}")
 def test_main_no_roc_validation(tmp_path, capsys, mock_wb_config, mock_clients, metadata_path):
@@ -77,8 +77,8 @@ def test_main_no_roc_validation(tmp_path, capsys, mock_wb_config, mock_clients, 
     output = captured.out
 
     assert exit_code == 0
-    assert  "RO-Crate metadata validation successful" not in output
-    assert  "Submitted task ID: 1" in output
+    assert "RO-Crate metadata validation successful" not in output
+    assert "Submitted task ID: 1" in output
 
 @pytest.mark.parametrize("dir", FIXTURE_DIRS, ids=lambda val: f"{val.name}")
 def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_wb_config, mock_clients, dir):
