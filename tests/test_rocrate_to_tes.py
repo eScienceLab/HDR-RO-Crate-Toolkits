@@ -29,22 +29,6 @@ def mock_clients(monkeypatch):
     )
     yield
 
-@pytest.fixture
-def mock_wb_config(tmp_path):
-    path = tmp_path / "config.yaml"
-    path.write_text(
-        """
-        config:
-          project: "Testing"
-          tes_base_url: "https://submission.layer.api"
-          tres:
-            - "DEMO"
-        auth:
-          access_token: "SECRET"
-        """
-    )
-    return str(path)
-
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.name}")
 def test_main_prints_extracted_message(tmp_path, capsys, mock_wb_config, mock_clients, metadata_path):
     # The CLI should emit the extracted TES message as JSON on stdout.
