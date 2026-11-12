@@ -28,15 +28,13 @@ def parse_args(argv=None):
         help="Path to a Five Safes TES Workbench config YAML file.",
     )
     parser.add_argument(
-        "--output_dir",
-        default=Path.cwd(),
+        "--output_rocrate",
+        default=Path.cwd() / "tes-result-ro-crate",
         type=Path,
-        help="Path to the directory to save the result RO-Crate. Defaults to the current working directory.",
-    )
-    parser.add_argument(
-        "--roc_name",
-        default="tes-result-ro-crate",
-        help="Name of the RO-Crate. 'tes-result-ro-crate' by default.",
+        help=(
+            "Path to the result RO-Crate. "
+            "Defaults to 'tes-submission-ro-crate' in the current working directory."
+        ),
     )
     parser.add_argument(
         "-v",
@@ -77,17 +75,16 @@ def main(argv=None):
         return 1
 
     # Save outputs at roc_output_dir
-    roc_output_dir = args.output_dir / args.roc_name
-    paths_dict = wb.fetch_outputs(task_id=task_id, output_dir=roc_output_dir)
+    paths_dict = wb.fetch_outputs(task_id=task_id, output_dir=args.output_rocrate)
 
     if paths_dict:
         # Create TES result crate
         try:
-            crate = create_tes_result_crate(crate, paths_dict, roc_output_dir)
+            crate = create_tes_result_crate(crate, paths_dict, args.output_rocrate)
         except ValueError as exc:
             logger.error(exc)
             return 1
-        crate.write(roc_output_dir)
+        crate.write(args.output_rocrate)
     else:
         # Create TES "task in progress" crate
         # TODO: Handle "in progress" tasks when function becomes available in workbench
@@ -96,7 +93,7 @@ def main(argv=None):
         logger.error("TES task has no outputs; result RO-Crate was not created.")
         return 1
 
-    logger.info(f"RO-Crate {args.roc_name} created at {args.output_dir}")
+    logger.info(f"RO-Crate {args.output_rocrate.name} created at {args.output_rocrate.parent}")
 
     return 0
 

@@ -1,11 +1,13 @@
+import json
 import uuid
 
 from pathlib import Path
+from zipfile import BadZipFile, ZipFile
 from fivesafe_crate_py import FiveSafesCrate
 from rocrate.model import File, ContextEntity, Person
 from rocrate.utils import iso_now
 
-from toolkits.clients.tes_client import is_tes_message_entity
+from toolkits.services.tes_service import is_tes_message_entity
 from toolkits.config.settings import ROCRATE_METADATA_FILENAME, TES_TASK_ID_SCHEMA_ID
 
 
@@ -18,6 +20,7 @@ def is_valid_output_rocrate_path(input_path: Path, output_path: Path) -> bool:
         input_dir = input_path
 
     return not "".join(input_dir.resolve().parts) in "".join(output_path.resolve().parts)
+
 
 def get_tes_task_id(crate: FiveSafesCrate) -> int:
     """Returns the TES task ID in the RO-Crate.
@@ -51,6 +54,7 @@ def get_tes_task_id(crate: FiveSafesCrate) -> int:
 
     return int(task_id_entity["value"])
 
+
 def get_tes_msg_entity(crate: FiveSafesCrate) -> File | ContextEntity:
     """Return the unique TES message in the RO-Crate.
 
@@ -73,6 +77,7 @@ def get_tes_msg_entity(crate: FiveSafesCrate) -> File | ContextEntity:
 
     return matches[0]
 
+
 def add_placeholder_org_and_author(crate):
     # TODO: Remove placeholder
     provider_id = "https://ror.org/027m9bs27"
@@ -86,6 +91,7 @@ def add_placeholder_org_and_author(crate):
         "affiliation": provider,
     }))
     return crate, agent, provider
+
 
 def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafesCrate:
     """Returns a 5S TES submission crate.
@@ -131,6 +137,7 @@ def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafe
 
     return crate
 
+
 def create_tes_result_crate(crate: FiveSafesCrate, paths_dict: dict, roc_output_dir) -> FiveSafesCrate:
     """Returns a 5S TES result crate.
 
@@ -170,3 +177,51 @@ def create_tes_result_crate(crate: FiveSafesCrate, paths_dict: dict, roc_output_
     crate.root_dataset["dateModified"] = iso_now()
 
     return crate
+
+
+def resolve_metadata_path(input_path):
+    """Resolve an input path to the RO-Crate metadata JSON file.
+
+    The input may be either a direct path to `ro-crate-metadata.json` or the
+    root directory of an RO-Crate containing that file.
+
+    Raises:
+        ValueError: if the input path does not exist or does not resolve to an
+            RO-Crate metadata JSON file.
+    """
+
+    path = Path(input_path)
+    if not path.exists():
+        raise ValueError(f"Input path does not exist: {path}")
+
+    if path.is_dir():
+        metadata_path = path / ROCRATE_METADATA_FILENAME
+        if not metadata_path.is_file():
+            raise ValueError(f"RO-Crate metadata file not found at: {metadata_path}")
+        return metadata_path
+
+    if path.is_file():
+        return path
+
+    raise ValueError(f"Input path is not a file or directory: {path}")
+
+
+def load_rocrate_metadata(input_path):
+    """Load RO-Crate metadata JSON from a file, crate directory, or ZIP archive."""
+
+    path = Path(input_path)
+    if path.is_file() and path.suffix.lower() == ".zip":
+        try:
+            with ZipFile(path) as zip_file:
+                with zip_file.open(ROCRATE_METADATA_FILENAME) as handle:
+                    return json.load(handle)
+        except KeyError as exc:
+            raise ValueError(
+                f"RO-Crate metadata file not found in archive: {path}"
+            ) from exc
+        except BadZipFile as exc:
+            raise ValueError(f"Invalid ZIP archive: {path}") from exc
+
+    metadata_path = resolve_metadata_path(path)
+    with metadata_path.open(encoding="utf-8") as handle:
+        return json.load(handle)
