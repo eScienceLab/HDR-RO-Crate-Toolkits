@@ -31,10 +31,10 @@ def mock_clients(monkeypatch, tmp_path):
     yield
 
 def test_main_creates_result_rocrate(tmp_path, capsys, mock_wb_config, mock_clients):
-    exit_code = main([str(FIXTURE_METADATA_PATHS), "--config_path", mock_wb_config, "--output_dir", str(tmp_path)])
+    output_dir = tmp_path / "tes-result-ro-crate"
+    exit_code = main([str(FIXTURE_METADATA_PATHS), "--config_path", mock_wb_config, "--output_rocrate", str(output_dir)])
 
     captured = capsys.readouterr()
-    output_dir = tmp_path / "tes-result-ro-crate"
 
     assert exit_code == 0
     assert "RO-Crate loaded" in captured.out
@@ -48,12 +48,13 @@ def test_main_creates_result_rocrate(tmp_path, capsys, mock_wb_config, mock_clie
 #     assert "DEBUG" in output
 
 def test_main_no_outputs(tmp_path, capsys, mock_wb_config, monkeypatch):
+    output_dir = tmp_path / "tes-result-ro-crate"
     monkeypatch.setattr(
         "toolkits.scripts.rocrate_save_tes.Workbench.fetch_outputs",
         lambda self, task_id, output_dir: {},
     )
 
-    exit_code = main([str(FIXTURE_METADATA_PATHS), "--config_path", mock_wb_config, "--output_dir", str(tmp_path), "-v"])
+    exit_code = main([str(FIXTURE_METADATA_PATHS), "--config_path", mock_wb_config, "--output_rocrate", str(output_dir)])
 
     captured = capsys.readouterr()
 
@@ -61,7 +62,8 @@ def test_main_no_outputs(tmp_path, capsys, mock_wb_config, monkeypatch):
     assert "TES task has no outputs; result RO-Crate was not created." in captured.err
 
 def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_wb_config, mock_clients):
-    exit_code = main([str(FIXTURE_DIR), "--config_path", mock_wb_config, "--output_dir", str(tmp_path)])
+    output_dir = tmp_path / "tes-result-ro-crate"
+    exit_code = main([str(FIXTURE_DIR), "--config_path", mock_wb_config, "--output_rocrate", str(output_dir)])
 
     captured = capsys.readouterr()
     
@@ -70,13 +72,14 @@ def test_main_accepts_rocrate_directory(tmp_path, capsys, mock_wb_config, mock_c
     assert (tmp_path / "tes-result-ro-crate" / ROCRATE_METADATA_FILENAME).exists()
 
 def test_main_accepts_rocrate_zip_archive(tmp_path, capsys, mock_wb_config, mock_clients):
+    output_dir = tmp_path / "tes-result-ro-crate"
     archive_path = tmp_path / "crate.zip"
     with ZipFile(archive_path, "w") as zip_file:
         for file in FIXTURE_DIR.rglob("*"):
             if file.is_file():
                 zip_file.write(file, arcname=file.relative_to(FIXTURE_DIR))
 
-    exit_code = main([str(archive_path), "--config_path", mock_wb_config, "--output_dir", str(tmp_path)])
+    exit_code = main([str(archive_path), "--config_path", mock_wb_config, "--output_rocrate", str(output_dir)])
 
     captured = capsys.readouterr()
     
