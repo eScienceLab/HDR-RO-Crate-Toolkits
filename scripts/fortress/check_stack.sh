@@ -26,7 +26,14 @@ for pair in "Submission Layer|http://localhost:7220" \
             "RO-Crate validator|http://localhost:5001"; do
     name="${pair%%|*}"; url="${pair#*|}"
     code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$url")
-    if [ "$code" != "000" ]; then ok "$name ($url) -> HTTP $code"; else bad "$name ($url) unreachable"; fi
+    # Any response below 500 counts as up, including redirects to login pages.
+    if [ "$code" = "000" ]; then
+        bad "$name ($url) unreachable"
+    elif [ "$code" -ge 500 ]; then
+        bad "$name ($url) -> HTTP $code"
+    else
+        ok "$name ($url) -> HTTP $code"
+    fi
 done
 
 echo "Image in dind:"

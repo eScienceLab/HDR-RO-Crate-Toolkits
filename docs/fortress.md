@@ -63,12 +63,12 @@ Helper scripts are in [scripts/fortress/](../scripts/fortress/). Run them from t
 
 4. Check the stack. From this repository, run `scripts/fortress/check_stack.sh`. At this point, every check should pass except the `tes_nw_wrapper` image, which you load in step 5.
 
-    If Docker restarts, only containers with `restart: always` come back. Keycloak, RabbitMQ, OpenLDAP and others will be left stopped, and the login pages will break. To recover, run `docker compose up -d` again in `DemoStack`, then restart the dependent services. Restart `treapi` last, after `submissionAPI` reports healthy:
+    If Docker restarts, only containers with `restart: always` come back. Keycloak, RabbitMQ, OpenLDAP and others will be left stopped, and the login pages will break. To recover, run `docker compose up -d` again in `DemoStack`, then restart the dependent services. Restart `tre-api` (container `treapi`) last, after `submissionAPI` reports healthy:
 
     ```bash
-    docker compose restart submissionAPI submissionUI treUI DataEgressAPI DataEgressUI
+    docker compose restart submissionAPI submissionUI tre-ui DataEgressAPI DataEgressUI
     docker ps --filter name=submissionAPI   # wait for "(healthy)"
-    docker compose restart treapi
+    docker compose restart tre-api
     ```
 
     If `treapi` starts while `submissionAPI` is still down, its TRE Agent never collects submissions. Submissions are accepted but stay on "Waiting for TRE Agent to Transfer" and never reach Funnel. The sign is that `docker logs treapi` shows `ClientHelperRequestAsync Crash with Endpoint http://submissionAPI:8080/...` and no `Execute DEMO DoAgentWork running` lines after it starts. Restarting `treapi` again fixes it.
