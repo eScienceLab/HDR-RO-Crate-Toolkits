@@ -17,7 +17,7 @@ All demo accounts use the password `password123`.
 | Submission Layer | <http://localhost:7220> | `accessfromtretosubmission` for TRE onboarding (step 2); `globaladminuser` for submitting (step 6) |
 | TRE Admin | <http://localhost:8989/DeploymentAdmin> | `globaladminuser` |
 | Data Egress | <http://localhost:8100> | `globaladminuser` |
-| RustFS console (outputs) | <http://localhost:9001> | Root keys set on `rustfs_submission` in the DemoStack compose files |
+| RustFS console (outputs) | <http://localhost:9001> | `globaladminuser`, choosing the Keycloak login option (not the default) |
 | Funnel API | <http://localhost:8000/v1/tasks> | No login |
 
 Helper scripts are in [scripts/fortress/](../scripts/fortress/). Run them from the repository root.
@@ -45,8 +45,15 @@ Helper scripts are in [scripts/fortress/](../scripts/fortress/). Run them from t
     - runs Funnel in Docker, with its config, entrypoint and compose changes (`ServiceStack/compose-manifests/tes/`)
     - adds the RO-Crate validator service (`ServiceStack/compose-manifests/rocrate/`)
     - fixes the submission RustFS trusted audience, changing `Dare-Control-UI-long` to `Dare-Control-UI-Long` in `ServiceStack/compose-manifests/storage/s3-submission.yml`. Without this fix, RustFS rejects access tokens copied from the Submission UI, and `rocrate-tes-fetch` can't download outputs.
+    - gives Funnel and the dind container a shared work folder (a `funnel_work` volume at `/opt/funnel/work`). Without it, Funnel only uploads the task's stdout and stderr, and any other file the task writes to `/outputs` is silently lost. The help task only produces stdout and stderr, so it works either way, but tasks that write their own output files need this.
 
-    If your stack was set up from an earlier version of this patch, apply the RustFS fix by hand. Edit that line in `s3-submission.yml`, then run `docker compose up -d rustfs_submission` in `DemoStack`.
+    If your stack was set up from an earlier version of this patch, re-apply the current one. In your 5S-TES-Deployment checkout, this discards any other local changes:
+
+    ```bash
+    git checkout -- . && rm -r ServiceStack/compose-manifests/rocrate
+    git apply <path-to>/5s-tes-7369bc4.patch
+    cd DemoStack && docker compose up -d --build
+    ```
 3. Start the demo stack:
 
     ```bash
@@ -56,11 +63,15 @@ Helper scripts are in [scripts/fortress/](../scripts/fortress/). Run them from t
 
 4. Check the stack. From this repository, run `scripts/fortress/check_stack.sh`. At this point, every check should pass except the `tes_nw_wrapper` image, which you load in step 5.
 
-    If Docker restarts, only containers with `restart: always` come back. Keycloak, RabbitMQ, OpenLDAP and others will be left stopped, and the login pages will break. To recover, run `docker compose up -d` again in `DemoStack`, then restart the dependent services:
+    If Docker restarts, only containers with `restart: always` come back. Keycloak, RabbitMQ, OpenLDAP and others will be left stopped, and the login pages will break. To recover, run `docker compose up -d` again in `DemoStack`, then restart the dependent services. Restart `treapi` last, after `submissionAPI` reports healthy:
 
     ```bash
-    docker compose restart submissionAPI submissionUI treapi treUI DataEgressAPI DataEgressUI
+    docker compose restart submissionAPI submissionUI treUI DataEgressAPI DataEgressUI
+    docker ps --filter name=submissionAPI   # wait for "(healthy)"
+    docker compose restart treapi
     ```
+
+    If `treapi` starts while `submissionAPI` is still down, its TRE Agent never collects submissions. Submissions are accepted but stay on "Waiting for TRE Agent to Transfer" and never reach Funnel. The sign is that `docker logs treapi` shows `ClientHelperRequestAsync Crash with Endpoint http://submissionAPI:8080/...` and no `Execute DEMO DoAgentWork running` lines after it starts. Restarting `treapi` again fixes it.
 
 ### 2. Connect the DEMO TRE and approve the project
 
@@ -177,7 +188,7 @@ You can also submit with the [workbench](https://github.com/federated-research/F
         ```
 
         It downloads the outputs into a result RO-Crate at `tes-result-ro-crate/`, containing `nw_wrapper_out.txt`, `nw_wrapper_err.txt`, `tes.json` and `ro-crate-metadata.json`. If it works, the last line is `RO-Crate tes-result-ro-crate created at ...`.
-    - **Otherwise:** browse the RustFS console (<http://localhost:9001>).
+    - **Otherwise:** browse the RustFS console (<http://localhost:9001>). On its login page, choose the Keycloak option, which isn't the default, and log in as `globaladminuser`.
 
     Once egress is approved, the results are copied to the Submission Layer's output bucket (`12464output` in the RustFS console). Each submission has its own folder, named after the **TRE-level submission ID**. That ID usually differs from the ID shown when you submitted: for example, toolkit task 3 was stored in folder `4`.
 4. **Check the output.** `nw_wrapper_out.txt` should contain the wrapper's help text:
@@ -187,6 +198,10 @@ You can also submit with the [workbench](https://github.com/federated-research/F
                          {finetune,inference,download} ...
     NWCyberComm Wrapper - Simplified interface for finetuning and inference
     ```
+
+## Running real inference
+
+These steps only run the help command. The FORTRESS repository documents running real inference with a test model through the same DemoStack, including getting `inference-out.jsonl` out through egress, in `Codes/tre_service/running-inference-in-5s-tes.md`. That needs Docker with at least 12 GB of memory, a FORTRESS test image that includes the model, and the shared work folder from the current patch (step 1.2). On an Apple Silicon Mac, a run takes about 50–60 minutes.
 
 ## Troubleshooting
 
@@ -198,8 +213,9 @@ You can also submit with the [workbench](https://github.com/federated-research/F
 | **Create Submission** missing on the Testing project | You're logged in as the wrong user. Use `globaladminuser` (step 6, option A). |
 | `rocrate-tes-submit: No such file or directory` | You're not in the repository root. `cd` there first, or run `source .venv/bin/activate`. |
 | `WARNING \| Invalid RO-Crate metadata` | The validator only supports RO-Crate 1.1. Add `--disable_roc_validator` (step 6, option B). |
-| Submission stays on "Waiting for TRE Agent to Transfer" | The agent may not have synced yet. Check Funnel (step 7.1). If the task is `COMPLETE`, refresh the page after a minute or two. If there's no task, check that DEMO is **Online** and the project is **Approved**. |
+| Submission stays on "Waiting for TRE Agent to Transfer" | The agent may not have synced yet. Check Funnel (step 7.1). If the task is `COMPLETE`, refresh the page after a minute or two. If there's no task, check that DEMO is **Online** and the project is **Approved**. If both are, and Docker or the stack was restarted, `treapi` may have started before `submissionAPI`: restart `treapi` (step 1.4). |
 | Blank page at `localhost:8100/signin-oidc` | Sign-in failed with a "Correlation failed" error, because the browser didn't send back the sign-in cookie. Use a private window or Chrome/Firefox, or clear cookies for `localhost` and `keycloak.localtest.me`. Safari is particularly affected over plain http. |
-| RustFS console asks for a login | It needs the root access and secret keys set on the `rustfs_submission` service in the 5S-TES-Deployment compose files. |
+| RustFS console asks for access keys | Choose the Keycloak login option instead of the default, and log in as `globaladminuser`. |
+| Task finishes but only `nw_wrapper_out.txt` and `nw_wrapper_err.txt` come back, not files it wrote to `/outputs` | The stack was set up from a patch without the shared Funnel work folder. Re-apply the current patch (step 1.2). |
 | `rocrate-tes-fetch` fails with ``STS token exchange failed (403) ... `Dare-Control-UI-Long` is not a trusted audience`` | RustFS's trusted audiences list `Dare-Control-UI-long` (lowercase `l`) in `ServiceStack/compose-manifests/storage/s3-submission.yml`, so tokens copied from the Submission UI are rejected. The current patch fixes this. If your stack predates it, apply the fix by hand (step 1.2). |
 | `rocrate-tes-fetch` fails with ``... `realm-management` is not a trusted audience`` | The config uses an access token copied from the Submission UI. Switch to Keycloak credentials and remove `access_token` (step 6, option B). |
