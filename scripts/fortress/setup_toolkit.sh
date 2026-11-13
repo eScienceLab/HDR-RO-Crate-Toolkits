@@ -9,8 +9,16 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
-if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 13))'; then
-    echo "ERROR: Python 3.13+ is required (found $(python3 --version))." >&2
+# Use the first Python 3.13+ found, so a newer python3.x works even if python3 is older.
+PYTHON=""
+for p in python3 python3.15 python3.14 python3.13; do
+    if command -v "$p" >/dev/null && "$p" -c 'import sys; sys.exit(sys.version_info < (3, 13))' 2>/dev/null; then
+        PYTHON="$p"
+        break
+    fi
+done
+if [ -z "$PYTHON" ]; then
+    echo "ERROR: Python 3.13+ is required (python3 is $(python3 --version 2>&1))." >&2
     exit 1
 fi
 
@@ -18,7 +26,7 @@ if [ -d .venv ] && ! .venv/bin/python -c 'import sys; sys.exit(sys.version_info 
     echo "==> Existing .venv uses an older or broken Python, recreating it"
     rm -rf .venv
 fi
-[ -d .venv ] || { echo "==> Creating .venv"; python3 -m venv .venv; }
+[ -d .venv ] || { echo "==> Creating .venv with $("$PYTHON" --version)"; "$PYTHON" -m venv .venv; }
 
 echo "==> Installing toolkit"
 .venv/bin/pip install -q --disable-pip-version-check -e ".[dev]"
