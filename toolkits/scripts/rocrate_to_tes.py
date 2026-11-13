@@ -72,7 +72,7 @@ def main(argv=None):
     logger = logging.getLogger(__name__)
 
     try:
-        crate = FiveSafesCrate(args.input_path, version="1.0")
+        crate = FiveSafesCrate(args.input_path, version="1.0-DRAFT")
         crate_metadata = load_rocrate_metadata(args.input_path)
         logger.info("RO-Crate metadata loaded")
     except (OSError, json.JSONDecodeError, ValueError) as exc:
