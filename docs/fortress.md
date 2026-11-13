@@ -18,6 +18,7 @@ All demo accounts use the password `password123`.
 | TRE Admin | <http://localhost:8989/DeploymentAdmin> | `globaladminuser` |
 | Data Egress | <http://localhost:8100> | `globaladminuser` |
 | RustFS console (outputs) | <http://localhost:9001> | `globaladminuser`, choosing the Keycloak login option (not the default) |
+| Keycloak admin console | <http://localhost:8085/admin> | `admin` / `admin` (not a demo account) |
 | Funnel API | <http://localhost:8000/v1/tasks> | No login |
 
 Helper scripts are in [scripts/fortress/](../scripts/fortress/). Run them from the repository root.
@@ -26,7 +27,7 @@ Helper scripts are in [scripts/fortress/](../scripts/fortress/). Run them from t
 | --- | --- |
 | `check_stack.sh` | Checks that the required containers and web UIs are up and that `tes_nw_wrapper` is loaded, and lists recent Funnel tasks |
 | `build_image.sh` | Pulls the FORTRESS image, builds `tes_nw_wrapper`, and loads it into the dind container (steps 4–5) |
-| `setup_toolkit.sh` | Creates `.venv`, installs the toolkits and `5s-crate-py`, and creates `.env` and `5s-tes-wb-config.yaml` |
+| `setup_toolkit.sh` | Creates `.venv`, installs the toolkits, and creates `.env` and `5s-tes-wb-config.yaml` |
 
 ## Steps
 
@@ -41,18 +42,16 @@ Helper scripts are in [scripts/fortress/](../scripts/fortress/). Run them from t
 
     - Note: This patch was created on commit 7369bc4. If conflicts occur when applying the patch, checkout commit 7369bc4 and apply the patch there.
 
-    The patch makes these changes to the DemoStack:
-    - runs Funnel in Docker, with its config, entrypoint and compose changes (`ServiceStack/compose-manifests/tes/`)
+    The patch:
+    - fixes the outdated dockerised Funnel setup (`ServiceStack/compose-manifests/tes/`), including a work folder shared with the dind container so that files a task writes to `/outputs` are uploaded
     - adds the RO-Crate validator service (`ServiceStack/compose-manifests/rocrate/`)
-    - fixes the submission RustFS trusted audience, changing `Dare-Control-UI-long` to `Dare-Control-UI-Long` in `ServiceStack/compose-manifests/storage/s3-submission.yml`. Without this fix, RustFS rejects access tokens copied from the Submission UI, and `rocrate-tes-fetch` can't download outputs.
-    - gives Funnel and the dind container a shared work folder (a `funnel_work` volume at `/opt/funnel/work`). Without it, Funnel only uploads the task's stdout and stderr, and any other file the task writes to `/outputs` is silently lost. The help task only produces stdout and stderr, so it works either way, but tasks that write their own output files need this.
+    - fixes the capitalisation of a RustFS trusted audience (`Dare-Control-UI-long` to `Dare-Control-UI-Long`)
 
-    If your stack was set up from an earlier version of this patch, re-apply the current one. In your 5S-TES-Deployment checkout, this discards any other local changes:
+    If your stack was set up from an earlier version of this patch, re-apply the current one, then continue from step 3. In your 5S-TES-Deployment checkout, this discards any other local changes:
 
     ```bash
     git checkout -- . && rm -r ServiceStack/compose-manifests/rocrate
     git apply <path-to>/5s-tes-7369bc4.patch
-    cd DemoStack && docker compose up -d --build
     ```
 3. Start the demo stack:
 
@@ -159,7 +158,7 @@ Use this option to check that the stack works without any local tooling.
     python3 -c "import json; print(next(c['secret'] for c in json.load(open('<path-to>/5S-TES-Deployment/DemoStack/config/realm-config/sub-layer.json'))['clients'] if c['clientId']=='Dare-Control-API'))"
     ```
 
-    It is also shown in the Keycloak admin console (<http://localhost:8085/admin>), under **Dare-Control realm → Clients → Dare-Control-API → Credentials**.
+    It is also shown in the Keycloak admin console (<http://localhost:8085/admin>), under **Dare-Control realm → Clients → Dare-Control-API → Credentials**. The admin console doesn't accept the demo accounts. Log in as `admin` with password `admin`, which is set by `KeycloakBootstrapAdminPassword` in `DemoStack/.env`.
 
     - Note: Use Keycloak credentials, not an access token copied from the Submission UI. A copied token works for submitting but not for `rocrate-tes-fetch` (step 7): RustFS checks every audience in the token, and rejects copied tokens because they include audiences it doesn't trust, such as `realm-management`. With credentials, the Workbench requests an ID token for `Dare-Control-API`, which RustFS accepts. Keep `keycloak_url` as `keycloak.localtest.me`, because the token issuer must match the Keycloak URL that RustFS is configured with.
 3. Submit from the repository root:
@@ -201,13 +200,14 @@ You can also submit with the [workbench](https://github.com/federated-research/F
 
 ## Running real inference
 
-These steps only run the help command. The FORTRESS repository documents running real inference with a test model through the same DemoStack, including getting `inference-out.jsonl` out through egress, in `Codes/tre_service/running-inference-in-5s-tes.md`. That needs Docker with at least 12 GB of memory, a FORTRESS test image that includes the model, and the shared work folder from the current patch (step 1.2). On an Apple Silicon Mac, a run takes about 50–60 minutes.
+These steps only run the help command. The [FORTRESS repository](https://github.com/UoMResearchIT/RTP-396-nwcybercomm) documents running real inference with a test model through the same DemoStack, including getting `inference-out.jsonl` out through egress, in `Codes/tre_service/running-inference-in-5s-tes.md`. That needs Docker with at least 12 GB of memory, a FORTRESS test image that includes the model, and the shared work folder from the current patch (step 1.2). On an Apple Silicon Mac, a run takes about 50–60 minutes.
 
 ## Troubleshooting
 
 | Symptom | Cause and fix |
 | --- | --- |
 | `docker login` returns `denied: denied` | GHCR rejected the token. Use a **classic** PAT with `read:packages`, log in with `--password-stdin` (step 3), and check that the token hasn't expired. |
+| "This site can't be reached" at `keycloak.localtest.me` | A VPN or local DNS setting is resolving `*.localtest.me` to the wrong address instead of `127.0.0.1`. Disconnect the VPN temporarily, or add `127.0.0.1 keycloak.localtest.me` to your hosts file (`/etc/hosts` on macOS and Linux). |
 | Login links or UIs are broken after a Docker restart | Some containers didn't restart. See step 1.4, or run `scripts/fortress/check_stack.sh` to find which ones. |
 | **Download config** missing in the Submission Layer | You're logged in as the wrong user. Use `accessfromtretosubmission` (step 2.1). |
 | **Create Submission** missing on the Testing project | You're logged in as the wrong user. Use `globaladminuser` (step 6, option A). |

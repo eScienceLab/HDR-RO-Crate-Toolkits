@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Set up the HDR RO-Crate Toolkits for submitting to the DemoStack:
-# creates .venv, installs the toolkit and 5s-crate-py, and creates .env and
+# creates .venv, installs the toolkit, and creates .env and
 # 5s-tes-wb-config.yaml from templates if they don't exist.
 #
 # Usage: scripts/fortress/setup_toolkit.sh
@@ -18,8 +18,6 @@ fi
 
 echo "==> Installing toolkit"
 .venv/bin/pip install -q --disable-pip-version-check -e ".[dev]"
-echo "==> Installing 5s-crate-py"
-.venv/bin/pip install -q --disable-pip-version-check "git+https://github.com/eScienceLab/5s-crate-py"
 
 if [ ! -f .env ]; then
     cp env.template .env && echo "==> Created .env"

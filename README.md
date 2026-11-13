@@ -45,9 +45,8 @@ This installs:
 - the package itself
 - the `rocrate-tes-submit` CLI
 - the `rocrate-tes-fetch` CLI
+- [5s-crate-py](https://github.com/eScienceLab/5s-crate-py), from GitHub
 - the development dependency `pytest`
-
-Then, install [5s-crate-py](https://github.com/eScienceLab/5s-crate-py) from source.
 
 ### 3. Configure .env
 
@@ -59,6 +58,8 @@ Required variables:
 ### 4. Configure the 5S TES Workbench config.yml
 
 Copy the `example-config.yml` from the [5S-TES-Workbench](https://github.com/federated-research/5S-TES-Workbench) repo and update the values. The path to this config file will be used when running the `rocrate-tes-submit` command.
+
+For the 5S-TES DemoStack, you can instead copy [scripts/fortress/5s-tes-wb-config.example.yaml](scripts/fortress/5s-tes-wb-config.example.yaml), which has the DemoStack settings filled in. You only need to add the `client_secret` (see [docs/fortress.md](docs/fortress.md), step 6).
 
 ### 5. Run the tests
 
