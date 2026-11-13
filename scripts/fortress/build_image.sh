@@ -6,13 +6,14 @@
 # (see docs/fortress.md, section 3).
 #
 # Usage: scripts/fortress/build_image.sh
-# Env:   DIND_CONTAINER  name of the dind container (default: demostack-dind-1)
+# Env:   COMPOSE_PROJECT  Compose project name of the DemoStack (default: demostack)
+#        DIND_CONTAINER   name of the dind container (default: <project>-dind-1)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_IMAGE="ghcr.io/uomresearchit/rtp-396-nwcybercomm/fortress:main"
 IMAGE="tes_nw_wrapper:latest"
-DIND="${DIND_CONTAINER:-demostack-dind-1}"
+DIND="${DIND_CONTAINER:-${COMPOSE_PROJECT:-demostack}-dind-1}"
 DIND_HOST="tcp://localhost:2375"
 
 if ! docker ps --format '{{.Names}}' | grep -qx "$DIND"; then

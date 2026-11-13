@@ -14,6 +14,10 @@ if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 13))'; then
     exit 1
 fi
 
+if [ -d .venv ] && ! .venv/bin/python -c 'import sys; sys.exit(sys.version_info < (3, 13))' 2>/dev/null; then
+    echo "==> Existing .venv uses an older or broken Python, recreating it"
+    rm -rf .venv
+fi
 [ -d .venv ] || { echo "==> Creating .venv"; python3 -m venv .venv; }
 
 echo "==> Installing toolkit"

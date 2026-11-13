@@ -3,19 +3,23 @@
 # that tes_nw_wrapper is loaded in dind, and show recent Funnel tasks.
 #
 # Usage: scripts/fortress/check_stack.sh
+# Env:   COMPOSE_PROJECT  Compose project name of the DemoStack (default: demostack)
+#        DIND_CONTAINER   name of the dind container (default: <project>-dind-1)
 set -uo pipefail
 
-DIND="${DIND_CONTAINER:-demostack-dind-1}"
+PROJECT="${COMPOSE_PROJECT:-demostack}"
+DIND="${DIND_CONTAINER:-$PROJECT-dind-1}"
 FAIL=0
 
 ok()   { printf '  \033[32mOK\033[0m    %s\n' "$1"; }
 bad()  { printf '  \033[31mFAIL\033[0m  %s\n' "$1"; FAIL=1; }
 
 echo "Containers:"
+running=$(docker ps --format '{{.Names}}')
 for c in keycloak rabbitmq openldap submissionAPI submissionUI treapi treUI \
          DataEgressAPI DataEgressUI rustfs_submission rustfs_TRE ROCValidAPI \
-         demostack-funnel-1 "$DIND"; do
-    if docker ps --format '{{.Names}}' | grep -qx "$c"; then ok "$c"; else bad "$c not running"; fi
+         "$PROJECT-funnel-1" "$DIND"; do
+    if grep -qx "$c" <<<"$running"; then ok "$c"; else bad "$c not running"; fi
 done
 
 echo "Web endpoints:"
@@ -27,13 +31,11 @@ for pair in "Submission Layer|http://localhost:7220" \
     name="${pair%%|*}"; url="${pair#*|}"
     code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$url")
     # Any response below 500 counts as up, including redirects to login pages.
-    if [ "$code" = "000" ]; then
-        bad "$name ($url) unreachable"
-    elif [ "$code" -ge 500 ]; then
-        bad "$name ($url) -> HTTP $code"
-    else
-        ok "$name ($url) -> HTTP $code"
-    fi
+    case "$code" in
+        [1-4][0-9][0-9]) ok "$name ($url) -> HTTP $code" ;;
+        000|"")          bad "$name ($url) unreachable" ;;
+        *)               bad "$name ($url) -> HTTP $code" ;;
+    esac
 done
 
 echo "Image in dind:"

@@ -50,7 +50,7 @@ Helper scripts are in [scripts/fortress/](../scripts/fortress/). Run them from t
     If your stack was set up from an earlier version of this patch, re-apply the current one, then continue from step 3. In your 5S-TES-Deployment checkout, this discards any other local changes:
 
     ```bash
-    git checkout -- . && rm -r ServiceStack/compose-manifests/rocrate
+    git checkout -- . && rm -rf ServiceStack/compose-manifests/rocrate
     git apply <path-to>/5s-tes-7369bc4.patch
     ```
 3. Start the demo stack:
