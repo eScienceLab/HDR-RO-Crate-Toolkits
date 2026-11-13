@@ -41,51 +41,19 @@ index 177053f..a2d1d1c 100644
  # ----- Volumes -----
  
  volumes:
-diff --git a/ServiceStack/compose-manifests/rocrate/validator.yml b/ServiceStack/compose-manifests/rocrate/validator.yml
-new file mode 100644
-index 0000000..32e662a
---- /dev/null
-+++ b/ServiceStack/compose-manifests/rocrate/validator.yml
-@@ -0,0 +1,39 @@
-+services:
-+
-+  # ------ RO-Crate Validator ------
-+  # ------------------------------------------
-+
-+  flask:
-+    image: "ghcr.io/esciencelab/cratey-validator-fivesafes-profile:v1.1.1"
-+    container_name: ROCValidAPI
-+    ports:
-+      - "5001:5000"
-+    environment:
-+      - FLASK_APP=cratey.py
-+      - FLASK_ENV=development
-+      - CELERY_BROKER_URL=redis://redis:6379/0
-+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-+    depends_on:
-+      - redis
-+    networks:
-+      - sub-net
-+
-+  celery_worker:
-+    image: "ghcr.io/esciencelab/cratey-validator-fivesafes-profile:v1.1.1"
-+    container_name: ROCValidWorker
-+    command: celery -A app.celery_worker.celery worker --loglevel=info -E
-+    environment:
-+      - CELERY_BROKER_URL=redis://redis:6379/0
-+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-+    depends_on:
-+      - redis
-+    networks:
-+      - sub-net
-+
-+
-+  redis:
-+    image: "redis:alpine"
-+    ports:
-+      - "6379:6379"
-+    networks:
-+      - sub-net
+diff --git a/ServiceStack/compose-manifests/storage/s3-submission.yml b/ServiceStack/compose-manifests/storage/s3-submission.yml
+index f28eca6..5d05a58 100644
+--- a/ServiceStack/compose-manifests/storage/s3-submission.yml
++++ b/ServiceStack/compose-manifests/storage/s3-submission.yml
+@@ -29,7 +29,7 @@ services:
+       - RUSTFS_IDENTITY_OPENID_ENABLE=true
+       - RUSTFS_IDENTITY_OPENID_CONFIG_URL=${SUBMISSION_KEYCLOAK_URL}/realms/Dare-Control
+       - RUSTFS_IDENTITY_OPENID_CLIENT_ID=Dare-Control-S3
+-      - RUSTFS_IDENTITY_OPENID_OTHER_AUDIENCES=Dare-Control-UI,Dare-Control-UI-long,Dare-Control-API,Dare-Control-S3,Dare-Control-Minio
++      - RUSTFS_IDENTITY_OPENID_OTHER_AUDIENCES=Dare-Control-UI,Dare-Control-UI-Long,Dare-Control-API,Dare-Control-S3,Dare-Control-Minio
+       - RUSTFS_IDENTITY_OPENID_CLIENT_SECRET=${SubmissionS3OpenidSecret}
+       - RUSTFS_IDENTITY_OPENID_SCOPES=openid
+       - RUSTFS_IDENTITY_OPENID_REDIRECT_URI_DYNAMIC=off
 diff --git a/ServiceStack/compose-manifests/tes/funnel/Dockerfile b/ServiceStack/compose-manifests/tes/funnel/Dockerfile
 index d32b564..a62e74f 100644
 --- a/ServiceStack/compose-manifests/tes/funnel/Dockerfile
@@ -135,9 +103,18 @@ index d32b564..a62e74f 100644
 +COPY --chmod=+x entrypoint.sh ./entrypoint.sh 
 +ENTRYPOINT ["./entrypoint.sh"]
 diff --git a/ServiceStack/compose-manifests/tes/funnel/config.template.yaml b/ServiceStack/compose-manifests/tes/funnel/config.template.yaml
-index 3e807dc..39b86a4 100644
+index 3e807dc..d3716b7 100644
 --- a/ServiceStack/compose-manifests/tes/funnel/config.template.yaml
 +++ b/ServiceStack/compose-manifests/tes/funnel/config.template.yaml
+@@ -7,7 +7,7 @@ Server:
+   RPCPort: "9090"
+ 
+ Worker:
+-  WorkDir: "/opt/funnel"
++  WorkDir: "/opt/funnel/work"
+   PollingRate: 5s
+   LogUpdateRate: 5s
+   LogTailSize: 10000 # 10 KB
 @@ -19,6 +19,6 @@ BoltDB:
  
  GenericS3:
@@ -171,10 +148,24 @@ index e7e214d..a9fdd31 100755
  
  exec funnel server run --config config.yaml
 diff --git a/ServiceStack/compose-manifests/tes/tes.yml b/ServiceStack/compose-manifests/tes/tes.yml
-index 0933094..27ecad8 100644
+index 0933094..9d62c1b 100644
 --- a/ServiceStack/compose-manifests/tes/tes.yml
 +++ b/ServiceStack/compose-manifests/tes/tes.yml
-@@ -11,18 +11,18 @@ services:
+@@ -2,7 +2,12 @@ services:
+   dind:
+     image: docker:dind
+     privileged: true
+-    command: dockerd --host=tcp://0.0.0.0:2375
++    # Funnel runs as uid 1000 (rootless), so give it the shared work folder before starting dockerd.
++    command: sh -c "chown 1000:1000 /opt/funnel/work && exec dockerd-entrypoint.sh dockerd --host=tcp://0.0.0.0:2375"
++    volumes:
++      # Shared with Funnel at the same path, so files that task containers write
++      # to their mounted inputs/outputs are visible to Funnel for upload.
++      - funnel_work:/opt/funnel/work
+     healthcheck:
+       test: ["CMD", "docker", "-H", "tcp://localhost:2375", "info"]
+       interval: 5s
+@@ -11,18 +16,18 @@ services:
      networks:
        - sub-net
  
@@ -198,7 +189,7 @@ index 0933094..27ecad8 100644
        "
      networks:
        - sub-net
-@@ -36,13 +36,13 @@ services:
+@@ -36,20 +41,23 @@ services:
      depends_on:
        dind:
          condition: service_healthy
@@ -215,3 +206,58 @@ index 0933094..27ecad8 100644
        - DOCKER_HOST=tcp://dind:2375
      networks:
        - sub-net
+     volumes:
+       - ./funnel:/opt/funnel/config
+       - funnel_data:/opt/funnel/data
++      - funnel_work:/opt/funnel/work
+ 
+ volumes:
+   funnel_data:
+     driver: local
++  funnel_work:
++    driver: local
+diff --git a/ServiceStack/compose-manifests/rocrate/validator.yml b/ServiceStack/compose-manifests/rocrate/validator.yml
+new file mode 100644
+index 0000000..32e662a
+--- /dev/null
++++ b/ServiceStack/compose-manifests/rocrate/validator.yml
+@@ -0,0 +1,39 @@
++services:
++
++  # ------ RO-Crate Validator ------
++  # ------------------------------------------
++
++  flask:
++    image: "ghcr.io/esciencelab/cratey-validator-fivesafes-profile:v1.1.1"
++    container_name: ROCValidAPI
++    ports:
++      - "5001:5000"
++    environment:
++      - FLASK_APP=cratey.py
++      - FLASK_ENV=development
++      - CELERY_BROKER_URL=redis://redis:6379/0
++      - CELERY_RESULT_BACKEND=redis://redis:6379/0
++    depends_on:
++      - redis
++    networks:
++      - sub-net
++
++  celery_worker:
++    image: "ghcr.io/esciencelab/cratey-validator-fivesafes-profile:v1.1.1"
++    container_name: ROCValidWorker
++    command: celery -A app.celery_worker.celery worker --loglevel=info -E
++    environment:
++      - CELERY_BROKER_URL=redis://redis:6379/0
++      - CELERY_RESULT_BACKEND=redis://redis:6379/0
++    depends_on:
++      - redis
++    networks:
++      - sub-net
++
++
++  redis:
++    image: "redis:alpine"
++    ports:
++      - "6379:6379"
++    networks:
++      - sub-net
