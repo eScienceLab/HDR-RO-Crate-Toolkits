@@ -38,15 +38,13 @@ def parse_args(argv=None):
         help="Path to a Five Safes TES Workbench config YAML file.",
     )
     parser.add_argument(
-        "--output_dir",
-        default=Path.cwd(),
+        "--output_rocrate",
+        default=Path.cwd() / "tes-result-ro-crate",
         type=Path,
-        help="Path to the directory to save the result RO-Crate. Defaults to the current working directory.",
-    )
-    parser.add_argument(
-        "--roc_name",
-        default="tes-result-ro-crate",
-        help="Name of the RO-Crate. 'tes-result-ro-crate' by default.",
+        help=(
+            "Path to the result RO-Crate. "
+            "Defaults to 'tes-result-ro-crate' in the current working directory.",
+        ),
     )
     verbosity = parser.add_mutually_exclusive_group()
     verbosity.add_argument(
@@ -79,7 +77,7 @@ def main(argv=None):
     logger = logging.getLogger(__name__)
 
     try:
-        crate = FiveSafesCrate(args.input_path, version="1.0")
+        crate = FiveSafesCrate(args.input_path, version="1.0-DRAFT")
         logger.info("RO-Crate loaded")
         task_id = get_tes_task_id(crate)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
@@ -96,12 +94,11 @@ def main(argv=None):
         logger.error(f"Invalid Workbench config {args.config_path}: {exc}")
         return ExitCode.INPUT_ERROR
 
-    # Save outputs at roc_output_dir
-    roc_output_dir = args.output_dir / args.roc_name
+    # Save outputs at output_rocrate
     try:
         # fetch_outputs raises untyped errors from its auth/STS/S3 helpers,
         # not WorkbenchError subclasses.
-        paths_dict = wb.fetch_outputs(task_id=task_id, output_dir=roc_output_dir)
+        paths_dict = wb.fetch_outputs(task_id=task_id, output_dir=args.output_rocrate)
     except (
         requests.RequestException, ConnectionError, TimeoutError,
         WorkbenchError, ValueError, RuntimeError, ClientError, BotoCoreError,
@@ -112,7 +109,7 @@ def main(argv=None):
         return ExitCode.SERVICE_ERROR
     except OSError as exc:
         # Creating directories or writing downloaded files under the output directory failed
-        logger.error(f"Could not save outputs for TES task {task_id} to {roc_output_dir}: {exc}")
+        logger.error(f"Could not save outputs for TES task {task_id} to {args.output_rocrate}: {exc}")
         return ExitCode.OUTPUT_ERROR
 
     # fetch_outputs returns {} when no task has completed, and {tre: []} when a
@@ -123,10 +120,10 @@ def main(argv=None):
         return ExitCode.NO_RESULTS
 
     try:
-        crate = create_tes_result_crate(crate, paths_dict, roc_output_dir)
-        crate.write(roc_output_dir)
+        crate = create_tes_result_crate(crate, paths_dict, args.output_rocrate)
+        crate.write(args.output_rocrate)
     except (OSError, ValueError) as exc:
-        logger.error(f"RO-Crate {args.roc_name} could not be saved to {args.output_dir}: {exc}")
+        logger.error(f"RO-Crate {args.output_rocrate.name} could not be saved to {args.output_rocrate.parent}: {exc}")
         return ExitCode.OUTPUT_ERROR
 
     logger.info(f"RO-Crate {args.roc_name} created at {args.output_dir}")

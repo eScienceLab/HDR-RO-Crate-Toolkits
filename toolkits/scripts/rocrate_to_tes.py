@@ -10,9 +10,9 @@ from fivesafe_crate_py import FiveSafesCrate
 
 from toolkits.config.exit_codes import ExitCode, exit_codes_epilog
 from toolkits.config.logging import configure_logging
-from toolkits.clients.tes_client import load_rocrate_metadata, extract_or_load_tes_message
+from toolkits.services.tes_service import extract_or_load_tes_message
 from toolkits.services.validation_service import is_rocrate_metadata_valid
-from toolkits.services.rocrate_service import is_valid_output_rocrate_path, create_tes_submission_crate
+from toolkits.services.rocrate_service import load_rocrate_metadata, is_valid_output_rocrate_path, create_tes_submission_crate
 
 
 def parse_args(argv=None):
@@ -86,7 +86,7 @@ def main(argv=None):
     logger = logging.getLogger(__name__)
 
     try:
-        crate = FiveSafesCrate(args.input_path, version="1.0")
+        crate = FiveSafesCrate(args.input_path, version="1.0-DRAFT")
         crate_metadata = load_rocrate_metadata(args.input_path)
         logger.info("RO-Crate metadata loaded")
     except (OSError, json.JSONDecodeError, ValueError) as exc:

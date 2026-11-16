@@ -1,11 +1,15 @@
 import logging
 import shutil
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest
 import requests
 from botocore.exceptions import ClientError
 
+from toolkits.config.settings import ROCRATE_METADATA_FILENAME
 from toolkits.config.exit_codes import ExitCode
 from toolkits.scripts.rocrate_save_tes import main
 
@@ -26,7 +30,7 @@ def _mock_fetch_outputs(monkeypatch, fn):
 
 
 def _run_main(input_path, config_path, output_dir):
-    return main([str(input_path), "--config_path", str(config_path), "--output_dir", str(output_dir)])
+    return main([str(input_path), "--config_path", str(config_path), "--output_rocrate", str(output_dir)])
 
 
 def test_main_success(tmp_path, submission_crate, mock_wb_config, monkeypatch):
@@ -37,10 +41,11 @@ def test_main_success(tmp_path, submission_crate, mock_wb_config, monkeypatch):
         return {"DEMO": [result]}
     _mock_fetch_outputs(monkeypatch, fake_fetch)
 
-    exit_code = _run_main(submission_crate, mock_wb_config, tmp_path / "out")
+    output_dir = tmp_path / "tes-result-ro-crate"
+    exit_code = _run_main(submission_crate, mock_wb_config, output_dir )
 
     assert exit_code == ExitCode.SUCCESS
-    assert (tmp_path / "out" / "tes-result-ro-crate" / "ro-crate-metadata.json").exists()
+    assert (output_dir / ROCRATE_METADATA_FILENAME).exists()
 
 
 def test_main_quiet_logs_only_errors(tmp_path, capsys, mock_wb_config):
@@ -187,3 +192,4 @@ def test_every_exit_code_has_a_description():
     from toolkits.config.exit_codes import EXIT_CODE_DESCRIPTIONS
 
     assert set(EXIT_CODE_DESCRIPTIONS) == set(ExitCode)
+
