@@ -126,7 +126,7 @@ def main(argv=None):
         logger.error(f"RO-Crate {args.output_rocrate.name} could not be saved to {args.output_rocrate.parent}: {exc}")
         return ExitCode.OUTPUT_ERROR
 
-    logger.info(f"RO-Crate {args.roc_name} created at {args.output_dir}")
+    logger.info(f"RO-Crate {args.output_rocrate.name} created at {args.output_rocrate.parent}")
     return ExitCode.SUCCESS
 
 
