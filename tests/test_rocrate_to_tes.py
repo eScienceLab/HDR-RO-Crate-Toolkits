@@ -38,6 +38,7 @@ def test_main_prints_extracted_message(tmp_path, capsys, mock_wb_config, mock_cl
     output = captured.out
 
     assert exit_code == 0
+    assert '"name": "Hello World"' in output
     assert "DEBUG" in output
     assert '"executors": [\n    {\n      "image": "ubuntu"' in output
 
