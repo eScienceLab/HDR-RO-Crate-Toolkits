@@ -162,7 +162,7 @@ def test_create_tes_submission_crate(metadata_path):
             assert entity.get("value") == task_id
 
     assert action_exists and task_id_exists
-    assert len(new_entities) == 4
+    assert len(new_entities) == 5
 
 def test_create_tes_result_crate(tmp_path):
     crate = FiveSafesCrate(FIXTURE_SUBMISSION_CRATE_PATH, version="1.0")
