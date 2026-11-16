@@ -85,12 +85,17 @@ def add_placeholder_org_and_author(crate):
         "@type": "Organization",
         "name": "TRE Provider"
     }))
+    recipient_id = "https://ror.org/05gq02987"
+    recipient = crate.add(ContextEntity(crate, recipient_id, properties={
+        "@type": "Organization",
+        "name": "Brown University"
+    }))
     agent_id = "https://orcid.org/0000-0002-1825-0097"
     agent = crate.add(Person(crate, agent_id, properties={
-        "name": "Person Name",
-        "affiliation": provider,
+        "name": "Josiah Stinkney Carberry",
+        "affiliation": recipient,
     }))
-    return crate, agent, provider
+    return crate, agent, recipient, provider
 
 
 def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafesCrate:
@@ -104,7 +109,7 @@ def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafe
         A Five Safes RO-Crate
     """
 
-    crate, agent, provider = add_placeholder_org_and_author(crate)
+    crate, agent, recipient, provider = add_placeholder_org_and_author(crate)
 
     tes_msg_entity = get_tes_msg_entity(crate)
 
@@ -114,7 +119,7 @@ def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafe
         "name": "TES task submission",
         "agent": agent,
         "provider": provider,
-        "recipient": provider,
+        "recipient": recipient,
         "endTime": iso_now(),
         "actionStatus": {"@id": "http://schema.org/CompletedActionStatus"},
         "object": tes_msg_entity,
@@ -155,7 +160,7 @@ def create_tes_result_crate(crate: FiveSafesCrate, paths_dict: dict, roc_output_
         result_entity = crate.add_file(path.as_posix(), relative_path.as_posix())
         result_entities.append(result_entity)
 
-    crate, agent, provider = add_placeholder_org_and_author(crate)
+    crate, agent, _, provider = add_placeholder_org_and_author(crate)
 
     tes_msg_entity = get_tes_msg_entity(crate)
 
