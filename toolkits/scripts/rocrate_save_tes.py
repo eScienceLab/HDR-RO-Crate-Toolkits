@@ -33,7 +33,7 @@ def parse_args(argv=None):
         type=Path,
         help=(
             "Path to the result RO-Crate. "
-            "Defaults to 'tes-submission-ro-crate' in the current working directory."
+            "Defaults to 'tes-result-ro-crate' in the current working directory.",
         ),
     )
     parser.add_argument(
