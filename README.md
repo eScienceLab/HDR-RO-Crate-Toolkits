@@ -45,9 +45,8 @@ This installs:
 - the package itself
 - the `rocrate-tes-submit` CLI
 - the `rocrate-tes-fetch` CLI
+- [5s-crate-py](https://github.com/eScienceLab/5s-crate-py), from GitHub
 - the development dependency `pytest`
-
-Then, install [5s-crate-py](https://github.com/eScienceLab/5s-crate-py) from source.
 
 ### 3. Configure .env
 
@@ -59,6 +58,8 @@ Required variables:
 ### 4. Configure the 5S TES Workbench config.yml
 
 Copy the `example-config.yml` from the [5S-TES-Workbench](https://github.com/federated-research/5S-TES-Workbench) repo and update the values. The path to this config file will be used when running the `rocrate-tes-submit` command.
+
+For the 5S-TES DemoStack, you can instead copy [scripts/fortress/5s-tes-wb-config.example.yaml](scripts/fortress/5s-tes-wb-config.example.yaml), which has the DemoStack settings filled in. You only need to add the `client_secret` (see [docs/fortress.md](docs/fortress.md), step 6).
 
 ### 5. Run the tests
 
@@ -91,3 +92,29 @@ If the tool runs successfully it should print the following information to the t
 - 'Validation passed' status, either True or False
 - The TES message, as formatted JSON
 - The 5S-TES response message, as formatted JSON, which contains the project and task ID's.
+
+Both commands accept `-v`/`--verbose` to show debug messages and the Five Safes TES Workbench's progress messages, or `-q`/`--quiet` to show only warnings and errors. The two options cannot be used together.
+
+### 8. Exit codes
+
+Both commands exit with a status code that tells scripts and CI pipelines why a run failed. The codes are defined in [`toolkits/config/exit_codes.py`](toolkits/config/exit_codes.py) and listed in each command's `--help` output.
+
+| Code | Name | Meaning | `rocrate-tes-submit` | `rocrate-tes-fetch` |
+|---|---|---|:---:|:---:|
+| 0 | `SUCCESS` | The command completed successfully | ✓ | ✓ |
+| 1 | `GENERAL_ERROR` | An unexpected error occurred | ✓ | ✓ |
+| 2 | `USAGE_ERROR` | Invalid command-line arguments | ✓ | ✓ |
+| 3 | `INPUT_ERROR` | The input RO-Crate or the Workbench config file is missing or invalid, or the crate has no (or more than one) TES message or task ID | ✓ | ✓ |
+| 4 | `VALIDATION_FAILED` | The RO-Crate validator rejected the crate's metadata | ✓ | |
+| 5 | `SERVICE_ERROR` | A remote service failed: the RO-Crate validator could not be reached, the TES task could not be built or submitted, or the task outputs could not be fetched | ✓ | ✓ |
+| 6 | `OUTPUT_ERROR` | The output RO-Crate could not be created or written, or the output path is inside the input crate | ✓ | ✓ |
+| 7 | `NO_RESULTS` | The TES task has no outputs yet, either because it is still running or because it produced no files | | ✓ |
+
+Example: retry `rocrate-tes-fetch` only while the task has no results yet:
+
+```
+rocrate-tes-fetch tes-submission-ro-crate --config_path 5s-tes-wb-config.yaml
+if [ $? -eq 7 ]; then
+    echo "Task not finished yet, try again later"
+fi
+```
