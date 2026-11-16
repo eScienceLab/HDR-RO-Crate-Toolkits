@@ -29,8 +29,11 @@ def _mock_fetch_outputs(monkeypatch, fn):
     monkeypatch.setattr("toolkits.scripts.rocrate_save_tes.Workbench.fetch_outputs", fn)
 
 
-def _run_main(input_path, config_path, output_dir):
-    return main([str(input_path), "--config_path", str(config_path), "--output_rocrate", str(output_dir)])
+def _run_main(input_path, config_path, output_dir, flag=None):
+    if flag:
+        return main([str(input_path), "--config_path", str(config_path), "--output_rocrate", str(output_dir), *flag])
+    else:
+        return main([str(input_path), "--config_path", str(config_path), "--output_rocrate", str(output_dir)])
 
 
 def test_main_success(tmp_path, submission_crate, mock_wb_config, monkeypatch):
@@ -41,8 +44,8 @@ def test_main_success(tmp_path, submission_crate, mock_wb_config, monkeypatch):
         return {"DEMO": [result]}
     _mock_fetch_outputs(monkeypatch, fake_fetch)
 
-    output_dir = tmp_path / "tes-result-ro-crate"
-    exit_code = _run_main(submission_crate, mock_wb_config, output_dir )
+    output_dir = tmp_path / "out"
+    exit_code = _run_main(submission_crate, mock_wb_config, output_dir)
 
     assert exit_code == ExitCode.SUCCESS
     assert (output_dir / ROCRATE_METADATA_FILENAME).exists()
@@ -154,7 +157,7 @@ def test_main_workbench_logs_follow_verbosity(tmp_path, capsys, submission_crate
         return {}
     _mock_fetch_outputs(monkeypatch, fake_fetch)
 
-    main([str(submission_crate), "--config_path", str(mock_wb_config), "--output_dir", str(tmp_path / "out"), *flag])
+    _run_main(submission_crate, mock_wb_config, tmp_path / "out", flag)
 
     captured = capsys.readouterr()
     assert ("Workbench info message" in captured.out) is info_shown
