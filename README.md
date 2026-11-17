@@ -69,7 +69,7 @@ This installs:
 - the `rocrate-tes-submit` CLI
 - the `rocrate-tes-fetch` CLI
 - [5s-crate-py](https://github.com/eScienceLab/5s-crate-py), from GitHub
-- the development dependency `pytest`
+- the development dependency `pytest`, if you installed with `".[dev]"`
 
 ### 3. Configure .env
 
