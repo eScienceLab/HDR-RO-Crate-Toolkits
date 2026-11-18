@@ -13,15 +13,15 @@ The toolkit provides two commands:
 
 [5S-TES](https://docs.federated-analytics.ac.uk/introduction) is a federated system for running analysis tasks in one or more Trusted Research Environments (TREs) following the Five Safes framework. Tasks are written as GA4GH TES messages and sent to the Submission layer, which checks that the user belongs to the project and queues the task. TRE Agents check the queue, pick up any task allocated to them, and run this against the data in their TRE. Before results leave the TRE, a reviewer must approve their release (egress); approved results are copied to the Submission layer's storage, where the researcher can retrieve them. See [How 5S-TES works](https://docs.federated-analytics.ac.uk/explanations/how-5s-tes-works/architecture) for details.
 
-The toolkit interacts with 5S-TES through the [Five Safes TES Workbench](https://github.com/federated-research/Five-Safes-TES-Workbench) library, which builds and submits TES tasks and fetches their outputs. The Workbench is configured with a YAML file (see [step 4](#4-configure-the-5s-tes-workbench-configyml)) containing the submission layer URL, the target TREs, the object storage details and an access token.
+The toolkit interacts with 5S-TES through the [Five Safes TES Workbench](https://github.com/federated-research/Five-Safes-TES-Workbench) library, which builds and submits TES tasks and fetches their outputs. The Workbench is configured with a YAML file (see [step 4](#4-configure-the-5s-tes-workbench-config-file)) containing the submission layer URL, the target TREs, the object storage details and an access token.
 
 To run a local 5S-TES demonstration stack, follow the [5S-TES test environment tutorial](https://docs.federated-analytics.ac.uk/tutorials/setup-testenv). [docs/fortress.md](docs/fortress.md) walks through a complete example, including a patch that adds the [RO-Crate Validation Service](https://github.com/eScienceLab/RO-Crate-Validation-Service) to the stack.
 
 ### RO-Crate validator
 
-Before submitting, `rocrate-tes-submit` sends the crate's metadata to the RO-Crate Validation Service, which checks it against the Five Safes RO-Crate profile. If validation fails, the task is not submitted.
+Before submitting, `rocrate-tes-submit` sends the crate's metadata to the RO-Crate Validation Service, which checks it against the RO-Crate specification. If validation fails, the task is not submitted.
 
-The service's URL is set by `CRATEY_VALIDATOR_API_URL` (see [step 3](#3-configure-env)). In the demonstration stack the validator runs at `http://localhost:5001`, using the `ghcr.io/esciencelab/cratey-validator-fivesafes-profile` image. Use `--disable_roc_validator` to skip validation, for example when no validator is available.
+The service's URL is set by `CRATEY_VALIDATOR_API_URL` (see [step 3](#3-configure-env)). In the demonstration stack the validator runs at `http://localhost:5001`, using the `ghcr.io/esciencelab/ro-crate-validation-service-fivesafes-profile:2.2.1` image. Use `--disable_roc_validator` to skip validation, for example when no validator is available.
 
 ## Requirements
 
@@ -78,11 +78,11 @@ Make a copy of `env.template`, rename it to `.env` and populate the variables.
 Required variables:
 - `CRATEY_VALIDATOR_API_URL`: The URL for the ro-crate validation service. This is `http://localhost:5001` for the demonstration 5S-TES stack.
 
-### 4. Configure the 5S TES Workbench config.yml
+### 4. Configure the 5S TES Workbench config file
 
-Copy the `example-config.yml` from the [Five Safes TES Workbench](https://github.com/federated-research/Five-Safes-TES-Workbench) repo and update the values. The path to this config file is passed to both commands with `--config_path`.
+Copy `example-config.yml` from the [Five Safes TES Workbench](https://github.com/federated-research/Five-Safes-TES-Workbench) repo to the repository root, rename it to `5s-tes-wb-config.yaml`, and update the values. The examples below use this name. The path to this file is passed to both commands with `--config_path`.
 
-For the 5S-TES DemoStack, you can instead copy [scripts/fortress/5s-tes-wb-config.example.yaml](scripts/fortress/5s-tes-wb-config.example.yaml), which has the DemoStack settings filled in. You only need to add the `client_secret` (see [docs/fortress.md](docs/fortress.md), step 6).
+For the 5S-TES DemoStack, you can instead copy [scripts/fortress/5s-tes-wb-config.example.yaml](scripts/fortress/5s-tes-wb-config.example.yaml) to `5s-tes-wb-config.yaml`. It has the DemoStack settings filled in, so you only need to add the `client_secret` (see [docs/fortress.md](docs/fortress.md), step 6).
 
 ### 5. Run the tests
 
