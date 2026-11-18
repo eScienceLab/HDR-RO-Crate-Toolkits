@@ -43,7 +43,7 @@ Helper scripts are in [scripts/fortress/](../scripts/fortress/). Run them from t
     - Note: This patch was created on commit 7369bc4. If conflicts occur when applying the patch, checkout commit 7369bc4 and apply the patch there.
 
     The patch:
-    - fixes the outdated dockerised Funnel setup (`ServiceStack/compose-manifests/tes/`), including a work folder shared with the dind container so that files a task writes to `/outputs` are uploaded
+    - fixes the outdated dockerised Funnel setup (`ServiceStack/compose-manifests/tes/`), including a work folder shared with the dind container so that files a task writes to `/outputs` are uploaded, and runs tasks as uid 1000 (the same user as Funnel) so that Funnel can delete their files afterwards
     - adds the [RO-Crate Validation Service](https://github.com/eScienceLab/RO-Crate-Validation-Service) 2.2.1 (`ServiceStack/compose-manifests/rocrate/`), which uses rocrate-validator 0.13.1 and supports RO-Crate 1.3
     - fixes the capitalisation of a RustFS trusted audience (`Dare-Control-UI-long` to `Dare-Control-UI-Long`)
 

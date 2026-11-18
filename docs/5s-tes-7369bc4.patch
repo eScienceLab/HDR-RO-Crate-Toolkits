@@ -103,10 +103,10 @@ index d32b564..a62e74f 100644
 +COPY --chmod=+x entrypoint.sh ./entrypoint.sh 
 +ENTRYPOINT ["./entrypoint.sh"]
 diff --git a/ServiceStack/compose-manifests/tes/funnel/config.template.yaml b/ServiceStack/compose-manifests/tes/funnel/config.template.yaml
-index 3e807dc..d3716b7 100644
+index 3e807dc..5fd961b 100644
 --- a/ServiceStack/compose-manifests/tes/funnel/config.template.yaml
 +++ b/ServiceStack/compose-manifests/tes/funnel/config.template.yaml
-@@ -7,7 +7,7 @@ Server:
+@@ -7,18 +7,34 @@ Server:
    RPCPort: "9090"
  
  Worker:
@@ -115,7 +115,27 @@ index 3e807dc..d3716b7 100644
    PollingRate: 5s
    LogUpdateRate: 5s
    LogTailSize: 10000 # 10 KB
-@@ -19,6 +19,6 @@ BoltDB:
+   LeaveWorkDir: false
+   MaxParallelTransfers: 10
++  Container:
++    DriverCommand: docker
++    # Funnel's default run command, plus --user 1000:1000 so that tasks run as the same user as
++    # Funnel. Otherwise tasks run as root, and Funnel can't delete the files they leave in the
++    # shared work folder.
++    RunCommand: |
++      run -i --read-only --user 1000:1000
++      {{if .RemoveContainer}}--rm{{end}}
++      {{.GetEnvArgs}}
++      {{range $k, $v := .Tags}}--label "{{$k}}={{$v}}" {{end}}
++      {{if .Name}}--name "{{.Name}}"{{end}}
++      {{if .Workdir}}--workdir "{{.Workdir}}"{{end}}
++      {{range .Volumes}}--volume "{{.HostPath}}:{{.ContainerPath}}:{{if .Readonly}}ro{{else}}rw{{end}}" {{end}}
++      {{.Image}} {{.Command}}
++    PullCommand: pull {{.Image}}
++    StopCommand: rm -f {{.Name}}
+ 
+ BoltDB:
+   Path: "/opt/funnel/data/funnel.db"
  
  GenericS3:
    - Disabled: false
