@@ -2,24 +2,23 @@
     "@context": "https://w3id.org/ro/crate/1.3/context",
     "@graph": [
         {
-            "@id": "https://tre72.example.org/activities/A1/current/",
+            "@id": "https://tre72.example.org/activities/A1/versions/3/",
             "@type": "Dataset",
             "conformsTo": [
                 {
                     "@id": "https://w3id.org/5s-crate/1.0-DRAFT"
                 }
             ],
-            "identifier": [
-                {
-                    "@id": "https://tre72.example.org/activities/A1/current/"
-                }
-            ],
+            "identifier": {
+                "@id": "https://tre72.example.org/activities/A1/versions/3/"
+            },
+            "version": 3,
+            "pav:previousVersion": {"@id": "https://tre72.example.org/activities/A1/versions/2/"},
             "dct:isVersionOf": {"@id": "https://tre72.example.org/activities/A1"},
             "name": "Hello World TES Task",
             "description": "A simple submission used to demo the toolkits",
-            "dateCreated": "2026-09-02T13:58:16+00:00",
-            "datePublished": "2026-09-02T13:58:16+00:00",
-            "dateModified": "2026-09-04T00:00:00+00:00",
+            "dateCreated": "2026-09-04T14:00:00+00:00",
+            "datePublished": "2026-09-04T15:00:00+00:00",
             "license": {"@id": "https://creativecommons.org/publicdomain/zero/1.0/"},
             "hasPart": [
                 {
@@ -42,7 +41,7 @@
             "@id": "ro-crate-metadata.json",
             "@type": "CreativeWork",
             "about": {
-                "@id": "https://tre72.example.org/activities/A1/current/"
+                "@id": "https://tre72.example.org/activities/A1/versions/3/"
             },
             "conformsTo": {
                 "@id": "https://w3id.org/ro/crate/1.3"
