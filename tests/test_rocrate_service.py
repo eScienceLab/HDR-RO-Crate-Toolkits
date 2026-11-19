@@ -229,9 +229,10 @@ def test_create_tes_result_crate(tmp_path):
         if "CreateAction" in entity.type and "prov:Activity" in entity.type:
             action_exists = True
 
+    assert crate.root_dataset.get("version") == 3
     assert action_exists
     assert crate.get("stdout.txt") is not None
-    assert len(new_entities) == 2
+    assert len(new_entities) == 3
 
 def test_resolve_metadata_path_rejects_invalid_path(tmp_path, monkeypatch):
     # Mock path which exists but is not dir or file

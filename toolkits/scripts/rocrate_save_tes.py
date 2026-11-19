@@ -77,9 +77,9 @@ def main(argv=None):
     logger = logging.getLogger(__name__)
 
     try:
-        crate = FiveSafesCrate(args.input_path, version="1.0-DRAFT")
+        input_crate = FiveSafesCrate(args.input_path, version="1.0-DRAFT")
         logger.info("RO-Crate loaded")
-        task_id = get_tes_task_id(crate)
+        task_id = get_tes_task_id(input_crate)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         logger.error(exc)
         return ExitCode.INPUT_ERROR
@@ -120,7 +120,7 @@ def main(argv=None):
         return ExitCode.NO_RESULTS
 
     try:
-        crate = create_tes_result_crate(crate, paths_dict, args.output_rocrate)
+        crate = create_tes_result_crate(input_crate, paths_dict, args.output_rocrate)
         crate.write(args.output_rocrate)
     except (OSError, ValueError) as exc:
         logger.error(f"RO-Crate {args.output_rocrate.name} could not be saved to {args.output_rocrate.parent}: {exc}")
