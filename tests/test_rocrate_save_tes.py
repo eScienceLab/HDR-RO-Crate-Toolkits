@@ -196,3 +196,13 @@ def test_every_exit_code_has_a_description():
 
     assert set(EXIT_CODE_DESCRIPTIONS) == set(ExitCode)
 
+
+
+def test_main_help_lists_options_and_exit_codes(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--help"])
+
+    assert exc_info.value.code == ExitCode.SUCCESS
+    out = capsys.readouterr().out
+    assert "--output_rocrate" in out
+    assert "exit codes:" in out

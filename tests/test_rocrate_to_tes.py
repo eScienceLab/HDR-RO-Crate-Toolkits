@@ -224,3 +224,13 @@ def test_main_write_failure_reports_submitted_task_id_in_quiet_mode(tmp_path, ca
     captured = capsys.readouterr()
     assert exit_code == ExitCode.OUTPUT_ERROR
     assert "TES task 1 was submitted" in captured.err
+
+
+def test_main_help_lists_options_and_exit_codes(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--help"])
+
+    assert exc_info.value.code == ExitCode.SUCCESS
+    out = capsys.readouterr().out
+    assert "--disable_roc_validator" in out
+    assert "exit codes:" in out
