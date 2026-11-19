@@ -9,11 +9,9 @@
                     "@id": "https://w3id.org/5s-crate/1.0-DRAFT"
                 }
             ],
-            "identifier": [
-                {
-                    "@id": "https://tre72.example.org/activities/A2/versions/1/"
-                }
-            ],
+            "identifier": {
+                "@id": "https://tre72.example.org/activities/A2/versions/1/"
+            },
             "version": 1,
             "dct:isVersionOf": {"@id": "https://tre72.example.org/activities/A2"},
             "name": "Hello World TES Task",
