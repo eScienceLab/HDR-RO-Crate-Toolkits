@@ -101,20 +101,44 @@ def add_placeholder_org_and_author(crate):
     return crate, agent, recipient, provider
 
 
-def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafesCrate:
-    """Returns a 5S TES submission crate.
-    
+def create_tes_submission_crate(input_crate: FiveSafesCrate, task_id: str) -> FiveSafesCrate:
+    """Returns a 5S TES submission crate (snapshot).
+
     Args:
-        crate: The RO-Crate to add submission information to.
+        input_crate: The RO-Crate to add submission information to.
         task_id: The ID of the successfully submitted task.
-    
+
     Returns:
         A Five Safes RO-Crate
     """
 
-    crate, agent, recipient, provider = add_placeholder_org_and_author(crate)
+    # Get entities from input crate
+    previousVersion = input_crate.root_dataset.get("version")
+    version = int(previousVersion) + 1
+    id = f"{input_crate.root_dataset.get("dct:isVersionOf")}/versions/{version}"
+    tes_msg_entity = get_tes_msg_entity(input_crate)
 
-    tes_msg_entity = get_tes_msg_entity(crate)
+    # Initialise crate
+    crate = FiveSafesCrate(version="1.0-DRAFT", rocrate_base_version="1.3", root_dataset_id=id, identifier=id)
+
+    # Root Data Entity (RDE)
+    crate.root_dataset["dateCreated"] = iso_now()
+    for key, value in input_crate.root_dataset.properties().items():
+        if key not in crate.root_dataset.properties():
+            crate.root_dataset[key] = value
+    crate.root_dataset["pav:previousVersion"] = input_crate.root_dataset
+    crate.root_dataset["version"] = version
+
+    # Other entities
+    for entity in input_crate.get_entities():
+        if entity == input_crate.root_dataset:
+            continue
+        if crate.dereference(entity.id) is None:
+            crate.add_jsonld(entity.properties())
+
+    # Add task submission entities
+
+    crate, agent, recipient, provider = add_placeholder_org_and_author(crate)
 
     action_id = uuid.uuid4().urn
     action_properties = {
@@ -140,8 +164,10 @@ def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafe
     }
     crate_tes_task = crate.add(ContextEntity(crate, identifier=crate_tes_task_id, properties=crate_tes_task_properties))
     action.append_to("identifier", crate_tes_task, compact=True)
-    
-    crate.root_dataset["dateModified"] = iso_now()
+
+    # Note that this should only be done before first crate.write(), 
+    # i.e. snapshots or first write of working record
+    crate.root_dataset["datePublished"] = iso_now()
 
     return crate
 

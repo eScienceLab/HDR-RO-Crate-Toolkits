@@ -86,7 +86,7 @@ def main(argv=None):
     logger = logging.getLogger(__name__)
 
     try:
-        crate = FiveSafesCrate(args.input_path, version="1.0-DRAFT")
+        input_crate = FiveSafesCrate(args.input_path, version="1.0-DRAFT")
         crate_metadata = load_rocrate_metadata(args.input_path)
         logger.info("RO-Crate metadata loaded")
     except (OSError, json.JSONDecodeError, ValueError) as exc:
@@ -137,7 +137,7 @@ def main(argv=None):
         return ExitCode.SERVICE_ERROR
 
     try:
-        crate = create_tes_submission_crate(crate, task_id)
+        crate = create_tes_submission_crate(input_crate, task_id)
         crate.write(args.output_rocrate)
     except (OSError, ValueError) as exc:
         logger.error(
