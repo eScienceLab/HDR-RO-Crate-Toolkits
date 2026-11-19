@@ -241,19 +241,20 @@ new file mode 100644
 index 0000000..32e662a
 --- /dev/null
 +++ b/ServiceStack/compose-manifests/rocrate/validator.yml
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,41 @@
 +services:
 +
 +  # ------ RO-Crate Validator ------
 +  # ------------------------------------------
 +
 +  flask:
-+    image: "ghcr.io/esciencelab/cratey-validator-fivesafes-profile:v1.1.1"
++    platform: linux/amd64
++    image: "ghcr.io/esciencelab/ro-crate-validation-service-fivesafes-profile:2.2.1"
 +    container_name: ROCValidAPI
 +    ports:
 +      - "5001:5000"
 +    environment:
-+      - FLASK_APP=cratey.py
++      - FLASK_APP=wsgi.py
 +      - FLASK_ENV=development
 +      - CELERY_BROKER_URL=redis://redis:6379/0
 +      - CELERY_RESULT_BACKEND=redis://redis:6379/0
@@ -263,7 +264,8 @@ index 0000000..32e662a
 +      - sub-net
 +
 +  celery_worker:
-+    image: "ghcr.io/esciencelab/cratey-validator-fivesafes-profile:v1.1.1"
++    platform: linux/amd64
++    image: "ghcr.io/esciencelab/ro-crate-validation-service-fivesafes-profile:2.2.1"
 +    container_name: ROCValidWorker
 +    command: celery -A app.celery_worker.celery worker --loglevel=info -E
 +    environment:

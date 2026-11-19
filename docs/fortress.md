@@ -44,7 +44,7 @@ Helper scripts are in [scripts/fortress/](../scripts/fortress/). Run them from t
 
     The patch:
     - fixes the outdated dockerised Funnel setup (`ServiceStack/compose-manifests/tes/`), including a work folder shared with the dind container so that files a task writes to `/outputs` are uploaded, and runs tasks as uid 1000 (the same user as Funnel) so that Funnel can delete their files afterwards
-    - adds the RO-Crate validator service (`ServiceStack/compose-manifests/rocrate/`)
+    - adds the [RO-Crate Validation Service](https://github.com/eScienceLab/RO-Crate-Validation-Service) 2.2.1 (`ServiceStack/compose-manifests/rocrate/`), which uses rocrate-validator 0.13.1 and supports RO-Crate 1.3
     - fixes the capitalisation of a RustFS trusted audience (`Dare-Control-UI-long` to `Dare-Control-UI-Long`)
 
     If your stack was set up from an earlier version of this patch, re-apply the current one, then continue from step 3. In your 5S-TES-Deployment checkout, this discards any other local changes:
@@ -167,9 +167,11 @@ Use this option to check that the stack works without any local tooling.
     .venv/bin/rocrate-tes-submit tests/data/fortress-5s-tes-pre-submission --config_path 5s-tes-wb-config.yaml --disable_roc_validator
     ```
 
-    If it works, the command prints `Task submitted successfully! ID: <n>`. It also writes a submission RO-Crate to `tes-submission-ro-crate/` that records the task ID.
+    If it works, the command logs `INFO | Submitted task ID: <n>`. It also writes a submission RO-Crate to `tes-submission-ro-crate/` that records the task ID.
 
-    - Note: `--disable_roc_validator` is currently required. The DemoStack's validator (`ROCValidAPI`, rocrate-validator 0.8.1) only validates against the RO-Crate 1.1 profile, so it rejects this RO-Crate 1.2 crate. It reports a missing `conformsTo` and an unknown `dct:isVersionOf` key. The crate itself is not at fault: the generic `5s-tes-pre-submission` crate fails in the same way.
+    - Note: `--disable_roc_validator` is currently required, for two reasons:
+        - The toolkit doesn't yet read the response format of Validation Service 2.x, so it reports every crate as invalid.
+        - The example crates don't have a `datePublished` property, which RO-Crate 1.3 requires, so they fail validation. The generic `5s-tes-pre-submission` crate fails in the same way.
 
 You can also submit with the [workbench](https://github.com/federated-research/Five-Safes-TES-Workbench) directly. The toolkits use it internally.
 
@@ -212,7 +214,7 @@ These steps only run the help command. The [FORTRESS repository](https://github.
 | **Download config** missing in the Submission Layer | You're logged in as the wrong user. Use `accessfromtretosubmission` (step 2.1). |
 | **Create Submission** missing on the Testing project | You're logged in as the wrong user. Use `globaladminuser` (step 6, option A). |
 | `rocrate-tes-submit: No such file or directory` | You're not in the repository root. `cd` there first, or run `source .venv/bin/activate`. |
-| `WARNING \| Invalid RO-Crate metadata` | The validator only supports RO-Crate 1.1. Add `--disable_roc_validator` (step 6, option B). |
+| `ERROR \| Invalid RO-Crate metadata` | The toolkit can't yet read the validator's response, and the example crates have no `datePublished`. Add `--disable_roc_validator` (step 6, option B). |
 | Submission stays on "Waiting for TRE Agent to Transfer" | The agent may not have synced yet. Check Funnel (step 7.1). If the task is `COMPLETE`, refresh the page after a minute or two. If there's no task, check that DEMO is **Online** and the project is **Approved**. If both are, and Docker or the stack was restarted, `treapi` may have started before `submissionAPI`: restart `treapi` (step 1.4). |
 | Blank page at `localhost:8100/signin-oidc` | Sign-in failed with a "Correlation failed" error, because the browser didn't send back the sign-in cookie. Use a private window or Chrome/Firefox, or clear cookies for `localhost` and `keycloak.localtest.me`. Safari is particularly affected over plain http. |
 | RustFS console asks for access keys | Choose the Keycloak login option instead of the default, and log in as `globaladminuser`. |
