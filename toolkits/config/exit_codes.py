@@ -10,7 +10,7 @@ class ExitCode(IntEnum):
     INPUT_ERROR = 3        # Input crate or Workbench config missing/unreadable/invalid,
                            # TES message or task ID missing/ambiguous
     VALIDATION_FAILED = 4  # RO-Crate validator rejected the metadata
-    SERVICE_ERROR = 5      # Validator API unreachable, TES build/submit failed, or output fetch failed
+    SERVICE_ERROR = 5      # Validator API unreachable or gave an unexpected response, TES build/submit failed, or output fetch failed
     OUTPUT_ERROR = 6       # Output crate could not be built or written, or output path nested in input
     NO_RESULTS = 7         # TES task has no outputs yet (still running or produced no files)
 
