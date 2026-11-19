@@ -175,7 +175,7 @@ Both commands exit with a status code that tells scripts and CI pipelines why a 
 | 2 | `USAGE_ERROR` | Invalid command-line arguments | ✓ | ✓ |
 | 3 | `INPUT_ERROR` | The input RO-Crate or the Workbench config file is missing or invalid, or the crate has no (or more than one) TES message or task ID | ✓ | ✓ |
 | 4 | `VALIDATION_FAILED` | The RO-Crate validator rejected the crate's metadata | ✓ | |
-| 5 | `SERVICE_ERROR` | A remote service failed: the RO-Crate validator could not be reached, the TES task could not be built or submitted, or the task outputs could not be fetched | ✓ | ✓ |
+| 5 | `SERVICE_ERROR` | A remote service failed: the RO-Crate validator could not be reached or returned an unexpected response, the TES task could not be built or submitted, or the task outputs could not be fetched | ✓ | ✓ |
 | 6 | `OUTPUT_ERROR` | The output RO-Crate could not be created or written, or the output path is inside the input crate | ✓ | ✓ |
 | 7 | `NO_RESULTS` | The TES task has no outputs yet, either because it is still running or because it produced no files | | ✓ |
 

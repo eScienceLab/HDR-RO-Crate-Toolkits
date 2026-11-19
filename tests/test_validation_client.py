@@ -12,7 +12,7 @@ SERIALISED_METADATA = '{"@context": "https://w3id.org/ro/crate/1.2/context"}'
 @patch("toolkits.clients.validation_client.requests.post")
 def test_validate_rocrate_metadata(mock_post):
     mock_response = Mock()
-    mock_response.json.return_value = {'result': '{\n    "passed": true,\n    "issues": []\n}'}
+    mock_response.json.return_value = {"status": "valid", "profile": None, "created_at": None, "detail": {"passed": True, "issues": []}}
     mock_response.raise_for_status.return_value = None
     mock_post.return_value = mock_response
 
@@ -25,7 +25,7 @@ def test_validate_rocrate_metadata(mock_post):
     payload = {"crate_json": SERIALISED_METADATA}
 
     mock_post.assert_called_once_with(url, headers=headers, json=payload)
-    assert response_json == {'result': '{\n    "passed": true,\n    "issues": []\n}'}
+    assert response_json == {"status": "valid", "profile": None, "created_at": None, "detail": {"passed": True, "issues": []}}
 
 def test_validate_rocrate_metadata_non_string_input():
     with pytest.raises(TypeError, match="serialised_metadata must be a string"):
