@@ -5,20 +5,20 @@ from toolkits.clients.validation_client import validate_rocrate_metadata
 
 def is_rocrate_metadata_valid(crate_metadata: dict) -> bool:
     """Return True when the data is valid RO-Crate metadata.
-    
+
     This function serialises the RO-Crate metadata into JSON formatted string,
-    gets response json from validation client, and process the results to 
-    to return True or False.
+    sends it to the validation client, and reads the `status` of the response,
+    which the RO-Crate Validation Service sets to "valid", "invalid" or "error".
 
     Args:
         crate_metadata (dict): The RO-Crate metadata to validate.
 
     Returns:
-        True if `passed` key exists and is True, else False.
-    
+        True if `status` is "valid", False if it is "invalid".
+
     Raises:
         TypeError: If `crate_metadata` is not a dictionary.
-        ValueError: If `result` contains invalid JSON.
+        ValueError: If `status` is missing or has any other value.
     """
 
     if not isinstance(crate_metadata, dict):
@@ -26,12 +26,14 @@ def is_rocrate_metadata_valid(crate_metadata: dict) -> bool:
 
     serialised_metadata = json.dumps(crate_metadata)
     response_json = validate_rocrate_metadata(serialised_metadata)
-    result = response_json.get("result", "{}")
+    status = response_json.get("status")
 
-    if isinstance(result, str):
-        try:
-            result_json = json.loads(result)
-        except json.JSONDecodeError:
-            raise ValueError("Invalid JSON in 'result'")
+    if status == "valid":
+        return True
+    if status == "invalid":
+        return False
 
-    return result_json.get("passed", False)
+    message = f"Unexpected validation status: {status!r}"
+    if response_json.get("error"):
+        message += f" ({response_json['error']})"
+    raise ValueError(message)
