@@ -69,7 +69,7 @@
             "agent": {"@id": "https://orcid.org/0000-0002-1825-0097"},
             "provider": {"@id": "https://ror.org/027m9bs27"},
             "recipient": {"@id": "https://ror.org/05gq02987"},
-            "endTime": "2026-09-02T14:00:00+00:00",
+            "endTime": "2026-09-03T14:00:00+00:00",
             "actionStatus": {
                 "@id": "http://schema.org/CompletedActionStatus"
             },
