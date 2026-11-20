@@ -132,7 +132,7 @@ def initialise_snapshot(input_crate: FiveSafesCrate, version: int | None = None)
         if previous_version is None:
             raise ValueError("The version number of the snapshot RO-Crate should be provided if the input RO-Crate is not a snapshot.")
         version = int(previous_version) + 1
-    id = f"{input_crate.root_dataset.get("dct:isVersionOf")}/versions/{version}/"
+    id = f"{input_crate.root_dataset.get("dct:isVersionOf")}/versions/{version}"
 
     # Initialise crate
     crate = FiveSafesCrate(version="1.0-DRAFT", rocrate_base_version="1.3", root_dataset_id=id, identifier=id)

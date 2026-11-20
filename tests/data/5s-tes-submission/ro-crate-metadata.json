@@ -2,7 +2,7 @@
     "@context": "https://w3id.org/ro/crate/1.3/context",
     "@graph": [
         {
-            "@id": "https://tre72.example.org/activities/A1/versions/2/",
+            "@id": "https://tre72.example.org/activities/A1/versions/2",
             "@type": "Dataset",
             "conformsTo": [
                 {
@@ -10,10 +10,10 @@
                 }
             ],
             "identifier": {
-                "@id": "https://tre72.example.org/activities/A1/versions/2/"
+                "@id": "https://tre72.example.org/activities/A1/versions/2"
             },
             "version": 2,
-            "pav:previousVersion": {"@id": "https://tre72.example.org/activities/A1/versions/1/"},
+            "pav:previousVersion": {"@id": "https://tre72.example.org/activities/A1/versions/1"},
             "dct:isVersionOf": {"@id": "https://tre72.example.org/activities/A1"},
             "name": "Hello World TES Task",
             "description": "A simple submission used to demo the toolkits",
@@ -35,7 +35,7 @@
             "@id": "ro-crate-metadata.json",
             "@type": "CreativeWork",
             "about": {
-                "@id": "https://tre72.example.org/activities/A1/versions/2/"
+                "@id": "https://tre72.example.org/activities/A1/versions/2"
             },
             "conformsTo": {
                 "@id": "https://w3id.org/ro/crate/1.3"
