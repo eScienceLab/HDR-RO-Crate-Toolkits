@@ -115,7 +115,7 @@ def add_placeholder_org_and_author(crate):
     return crate, agent, recipient, provider
 
 
-def initialise_snapshot(input_crate: FiveSafesCrate) -> FiveSafesCrate:
+def initialise_snapshot(input_crate: FiveSafesCrate, version: int | None = None) -> FiveSafesCrate:
     """Returns a Five Safes RO-Crate with the required entities and 
     Root Data Entity (RDE) properties extracted from the input crate.
 
@@ -127,7 +127,11 @@ def initialise_snapshot(input_crate: FiveSafesCrate) -> FiveSafesCrate:
     """
 
     # Get new identifier
-    version = int(input_crate.root_dataset.get("version")) + 1
+    if version is None:
+        previous_version = input_crate.root_dataset.get("version")
+        if previous_version is None:
+            raise ValueError("The version number of the snapshot RO-Crate should be provided if the input RO-Crate is not a snapshot.")
+        version = int(previous_version) + 1
     id = f"{input_crate.root_dataset.get("dct:isVersionOf")}/versions/{version}/"
 
     # Initialise crate
