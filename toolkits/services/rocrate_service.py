@@ -1,14 +1,20 @@
 import json
+import logging
+import shutil
+import tempfile
 import uuid
 
 from pathlib import Path
-from zipfile import BadZipFile, ZipFile
+from zipfile import BadZipFile, ZipFile, is_zipfile
 from fivesafe_crate_py import FiveSafesCrate
 from rocrate.model import File, ContextEntity, Person
 from rocrate.utils import iso_now
 
 from toolkits.services.tes_service import is_tes_message_entity
 from toolkits.config.settings import ROCRATE_METADATA_FILENAME, TES_TASK_ID_SCHEMA_ID
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_valid_output_rocrate_path(input_path: Path, output_path: Path) -> bool:
@@ -122,7 +128,7 @@ def initialise_snapshot(input_crate: FiveSafesCrate) -> FiveSafesCrate:
 
     # Get new identifier
     version = int(input_crate.root_dataset.get("version")) + 1
-    id = f"{input_crate.root_dataset.get("dct:isVersionOf")}/versions/{version}"
+    id = f"{input_crate.root_dataset.get("dct:isVersionOf")}/versions/{version}/"
 
     # Initialise crate
     crate = FiveSafesCrate(version="1.0-DRAFT", rocrate_base_version="1.3", root_dataset_id=id, identifier=id)
@@ -242,6 +248,47 @@ def create_tes_result_crate(input_crate: FiveSafesCrate, paths_dict: dict, roc_o
     crate.root_dataset["datePublished"] = iso_now()
 
     return crate
+
+
+def write_crate(crate: FiveSafesCrate, input_path: Path, output_rocrate: Path) -> bool:
+    """Copy RO-Crate payload files from a directory or ZIP archive, and write metadata."""
+
+    try:
+        temp_dir = Path(tempfile.mkdtemp(dir=output_rocrate.parent, prefix=f".{output_rocrate.name}_tmp_"))
+        backup_dir = Path(tempfile.mkdtemp(dir=output_rocrate.parent, prefix=f".{output_rocrate.name}_bak_"))
+
+        if input_path.is_dir():
+            shutil.copytree(input_path, temp_dir, dirs_exist_ok=True)
+        elif is_zipfile(input_path):
+            with ZipFile(input_path, "r") as zip_file:
+                zip_file.extractall(temp_dir)
+        else:
+            shutil.copytree(input_path.parent, temp_dir, dirs_exist_ok=True)
+        crate.write(str(temp_dir))
+
+        if output_rocrate.exists():
+            output_rocrate.rename(backup_dir)
+
+        temp_dir.rename(output_rocrate)
+        temp_dir = None
+
+        if backup_dir:
+            try:
+                shutil.rmtree(backup_dir)
+                backup_dir = None
+            except OSError as exc:
+                logger.warning(
+                    f"RO-Crate backup could not be removed at {backup_dir}: {exc}"
+                )
+
+        return True
+    except (OSError, shutil.Error, ValueError, BadZipFile):
+        if backup_dir:
+            if output_rocrate.exists():
+                shutil.rmtree(output_rocrate)
+            backup_dir.rename(output_rocrate)
+            backup_dir = None
+        raise
 
 
 def resolve_metadata_path(input_path):

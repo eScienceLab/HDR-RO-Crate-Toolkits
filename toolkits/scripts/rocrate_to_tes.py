@@ -1,9 +1,11 @@
 import argparse
 import json
 import logging
-
+import shutil
 import yaml
+
 from pathlib import Path
+from zipfile import BadZipFile
 from five_safes_tes_workbench.workbench import Workbench
 from five_safes_tes_workbench.common.exceptions.base import WorkbenchError
 from fivesafe_crate_py import FiveSafesCrate
@@ -12,7 +14,7 @@ from toolkits.config.exit_codes import ExitCode, exit_codes_epilog
 from toolkits.config.logging import configure_logging
 from toolkits.services.tes_service import extract_or_load_tes_message
 from toolkits.services.validation_service import is_rocrate_metadata_valid
-from toolkits.services.rocrate_service import load_rocrate_metadata, is_valid_output_rocrate_path, create_tes_submission_crate
+from toolkits.services.rocrate_service import load_rocrate_metadata, is_valid_output_rocrate_path, create_tes_submission_crate, write_crate
 
 
 def parse_args(argv=None):
@@ -138,8 +140,8 @@ def main(argv=None):
 
     try:
         crate = create_tes_submission_crate(input_crate, task_id)
-        crate.write(args.output_rocrate)
-    except (OSError, ValueError) as exc:
+        write_crate(crate, Path(args.input_path), args.output_rocrate)
+    except (OSError, shutil.Error, ValueError, BadZipFile) as exc:
         logger.error(
             f"TES task {task_id} was submitted, but RO-Crate {args.output_rocrate.name} "
             f"could not be saved to {args.output_rocrate.parent}: {exc}"
