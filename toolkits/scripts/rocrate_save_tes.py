@@ -7,7 +7,7 @@ import yaml
 
 from botocore.exceptions import BotoCoreError, ClientError
 from pathlib import Path
-from zipfile import BadZipFile, ZipFile, is_zipfile
+from zipfile import BadZipFile
 from five_safes_tes_workbench.common.exceptions.base import WorkbenchError
 from five_safes_tes_workbench.workbench import Workbench
 from fivesafe_crate_py import FiveSafesCrate

@@ -16,6 +16,8 @@ from toolkits.services.rocrate_service import (
     is_valid_output_rocrate_path,
     get_tes_task_id,
     get_tes_msg_entity,
+    initialise_snapshot,
+    write_crate,
     create_tes_submission_crate,
     create_tes_result_crate,
     resolve_metadata_path,
@@ -193,6 +195,28 @@ def test_get_tes_msg_entity_with_multiple_id_entities():
     with pytest.raises(ValueError, match="Multiple TES message candidates found in RO-Crate metadata."):
         get_tes_msg_entity(crate)
 
+def test_initialise_snapshot(tmp_path):
+    crate_dir = tmp_path / "submission-crate"
+    shutil.copytree(FIXTURE_SUBMISSION_CRATE_PATH.parent, crate_dir)
+
+    input_crate = FiveSafesCrate(str(crate_dir), version="1.0-DRAFT")
+    crate = initialise_snapshot(input_crate)
+
+    assert crate.root_dataset.get("version") == 3
+
+def test_initialise_snapshot_with_unversioned_crate(tmp_path):
+    crate_dir = tmp_path / "submission-crate"
+    metadata_path = crate_dir / ROCRATE_METADATA_FILENAME
+    shutil.copytree(FIXTURE_SUBMISSION_CRATE_PATH.parent, crate_dir)
+
+    metadata = json.loads(metadata_path.read_text())
+    del metadata["@graph"][0]["version"]
+    metadata_path.write_text(json.dumps(metadata, indent=4))
+    input_crate = FiveSafesCrate(str(metadata_path), version="1.0-DRAFT")
+
+    with pytest.raises(ValueError):
+        initialise_snapshot(input_crate)
+
 @pytest.mark.parametrize("metadata_path", FIXTURE_METADATA_PATHS, ids=lambda val: f"{val.parent.name}")
 def test_create_tes_submission_crate(metadata_path):
     crate = FiveSafesCrate(metadata_path, version="1.0")
@@ -233,6 +257,16 @@ def test_create_tes_result_crate(tmp_path):
     assert action_exists
     assert crate.get("stdout.txt") is not None
     assert len(new_entities) == 3
+
+def test_write_crate(tmp_path):
+    output_dir = tmp_path / "out"
+    crate_dir = tmp_path / "submission-crate"
+    shutil.copytree(FIXTURE_SUBMISSION_CRATE_PATH.parent, crate_dir)
+
+    crate = FiveSafesCrate(str(crate_dir), version="1.0-DRAFT")
+    write_crate(crate, crate_dir, output_dir)
+
+    assert (output_dir / "tes.json").exists()
 
 def test_resolve_metadata_path_rejects_invalid_path(tmp_path, monkeypatch):
     # Mock path which exists but is not dir or file
