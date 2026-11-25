@@ -51,6 +51,12 @@ def test_main_success(tmp_path, submission_crate, mock_wb_config, monkeypatch):
     assert (output_dir / ROCRATE_METADATA_FILENAME).exists()
 
 
+def test_main_nested_output_returns_output_error(submission_crate, mock_wb_config):
+    exit_code = _run_main(submission_crate, mock_wb_config, submission_crate / "output-crate")
+
+    assert exit_code == ExitCode.OUTPUT_ERROR
+
+
 def test_main_quiet_logs_only_errors(tmp_path, capsys, mock_wb_config):
     exit_code = main([str(tmp_path / "missing-crate"), "--config_path", str(mock_wb_config), "-q"])
 
@@ -195,7 +201,6 @@ def test_every_exit_code_has_a_description():
     from toolkits.config.exit_codes import EXIT_CODE_DESCRIPTIONS
 
     assert set(EXIT_CODE_DESCRIPTIONS) == set(ExitCode)
-
 
 
 def test_main_help_lists_options_and_exit_codes(capsys):

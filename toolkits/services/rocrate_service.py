@@ -1,14 +1,19 @@
 import json
+import logging
+import shutil
 import uuid
 
 from pathlib import Path
-from zipfile import BadZipFile, ZipFile
+from zipfile import BadZipFile, ZipFile, is_zipfile
 from fivesafe_crate_py import FiveSafesCrate
 from rocrate.model import File, ContextEntity, Person
 from rocrate.utils import iso_now
 
 from toolkits.services.tes_service import is_tes_message_entity
 from toolkits.config.settings import ROCRATE_METADATA_FILENAME, TES_TASK_ID_SCHEMA_ID
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_valid_output_rocrate_path(input_path: Path, output_path: Path) -> bool:
@@ -25,11 +30,12 @@ def _as_list(value) -> list:
     """Return a property value as a list, since JSON-LD allows a single value or a list."""
     return value if isinstance(value, list) else [value]
 
-def get_tes_task_id(crate: FiveSafesCrate) -> int:
-    """Returns the TES task ID in the RO-Crate.
+
+def get_tes_task_id_entity(crate: FiveSafesCrate) -> ContextEntity | None:
+    """Returns the TES task ID entity in the RO-Crate.
 
     Args:
-        crate: The RO-Crate to extract TES message from.
+        crate: The RO-Crate to extract TES task ID entity from.
 
     Raises:
         ValueError: If no TES task ID entity is found, or if more than one entity is present.
@@ -55,6 +61,13 @@ def get_tes_task_id(crate: FiveSafesCrate) -> int:
     if not action_matches:
         raise ValueError("The TES task submission action entity must carry the TES task ID.")
 
+    return task_id_entity
+
+
+def get_tes_task_id(crate: FiveSafesCrate) -> int:
+    """Returns the TES task ID in the RO-Crate."""
+
+    task_id_entity = get_tes_task_id_entity(crate)
     return int(task_id_entity["value"])
 
 
@@ -101,20 +114,64 @@ def add_placeholder_org_and_author(crate):
     return crate, agent, recipient, provider
 
 
-def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafesCrate:
-    """Returns a 5S TES submission crate.
-    
+def initialise_snapshot(input_crate: FiveSafesCrate, version: int | None = None) -> FiveSafesCrate:
+    """Returns a Five Safes RO-Crate with the required entities and 
+    Root Data Entity (RDE) properties extracted from the input crate.
+
     Args:
-        crate: The RO-Crate to add submission information to.
-        task_id: The ID of the successfully submitted task.
-    
+        input_crate: The pre-submission or submission RO-Crate.
+
     Returns:
-        A Five Safes RO-Crate
+        An initialised snapshot Five Safes RO-Crate
     """
+
+    # Get new identifier
+    if version is None:
+        previous_version = input_crate.root_dataset.get("version")
+        if previous_version is None:
+            raise ValueError("The version number of the snapshot RO-Crate should be provided if the input RO-Crate is not a snapshot.")
+        version = int(previous_version) + 1
+    id = f"{input_crate.root_dataset.get("dct:isVersionOf")}/versions/{version}"
+
+    # Initialise crate
+    crate = FiveSafesCrate(version="1.0-DRAFT", rocrate_base_version="1.3", root_dataset_id=id, identifier=id)
+
+    # Update RDE
+    crate.root_dataset["dateCreated"] = iso_now()
+    for key, value in input_crate.root_dataset.properties().items():
+        if key not in crate.root_dataset.properties():
+            crate.root_dataset[key] = value
+    crate.root_dataset["pav:previousVersion"] = input_crate.root_dataset
+    crate.root_dataset["version"] = version
+
+    # Other entities
+    for entity in input_crate.get_entities():
+        if entity == input_crate.root_dataset:
+            continue
+        if crate.dereference(entity.id) is None:
+            crate.add_jsonld(entity.properties())
+
+    return crate
+
+
+def create_tes_submission_crate(input_crate: FiveSafesCrate, task_id: str) -> FiveSafesCrate:
+    """Returns a 5S TES submission crate (snapshot).
+
+    Args:
+        input_crate: The pre-submission RO-Crate with tes message.
+        task_id: The ID of the successfully submitted task.
+
+    Returns:
+        A Five Safes RO-Crate with submission information
+    """
+
+    crate = initialise_snapshot(input_crate)
+
+    # Add task submission entities
 
     crate, agent, recipient, provider = add_placeholder_org_and_author(crate)
 
-    tes_msg_entity = get_tes_msg_entity(crate)
+    tes_msg_entity = get_tes_msg_entity(input_crate)
 
     action_id = uuid.uuid4().urn
     action_properties = {
@@ -140,21 +197,25 @@ def create_tes_submission_crate(crate: FiveSafesCrate, task_id: str) -> FiveSafe
     }
     crate_tes_task = crate.add(ContextEntity(crate, identifier=crate_tes_task_id, properties=crate_tes_task_properties))
     action.append_to("identifier", crate_tes_task, compact=True)
-    
-    crate.root_dataset["dateModified"] = iso_now()
+
+    # Note that this should only be done before first crate.write(), 
+    # i.e. snapshots or first write of working record
+    crate.root_dataset["datePublished"] = iso_now()
 
     return crate
 
 
-def create_tes_result_crate(crate: FiveSafesCrate, paths_dict: dict, roc_output_dir) -> FiveSafesCrate:
-    """Returns a 5S TES result crate.
+def create_tes_result_crate(input_crate: FiveSafesCrate, paths_dict: dict, roc_output_dir) -> FiveSafesCrate:
+    """Returns a 5S TES result crate (snapshot).
 
     Args:
-        crate: The RO-Crate to add result information to.
+        input_crate: The submission RO-Crate with a TES task ID.
 
     Returns:
-        A Five Safes RO-Crate
+        A Five Safes RO-Crate with results of a TES task
     """
+
+    crate = initialise_snapshot(input_crate)
 
     result_entities = []
     paths = [path for path_list in paths_dict.values() for path in path_list]
@@ -182,9 +243,34 @@ def create_tes_result_crate(crate: FiveSafesCrate, paths_dict: dict, roc_output_
     action = crate.add(ContextEntity(crate, identifier=action_id, properties=action_properties))
     crate.root_dataset.append_to("mentions", action)
 
-    crate.root_dataset["dateModified"] = iso_now()
+    crate_tes_task = get_tes_task_id_entity(crate)
+    action.append_to("identifier", crate_tes_task, compact=True)
+
+    # Note that this should only be done before first crate.write(), 
+    # i.e. snapshots or first write of working record
+    crate.root_dataset["datePublished"] = iso_now()
 
     return crate
+
+
+def write_crate(crate: FiveSafesCrate, input_path: Path, output_rocrate: Path) -> bool:
+    """Copy RO-Crate payload files from a directory or ZIP archive, and write metadata."""
+
+    # TODO: Replace this function with safe saving from `5s-crate-py` when it exists.
+
+    # Copy RO-Crate payload files to the output path
+    if input_path.is_dir():
+        shutil.copytree(input_path, output_rocrate, dirs_exist_ok=True)
+    elif is_zipfile(input_path):
+        with ZipFile(input_path, "r") as zip_file:
+            zip_file.extractall(output_rocrate)
+    else:
+        shutil.copytree(input_path.parent, output_rocrate, dirs_exist_ok=True)
+
+    # Write crate to output path
+    crate.write(str(output_rocrate))
+
+    return True
 
 
 def resolve_metadata_path(input_path):
