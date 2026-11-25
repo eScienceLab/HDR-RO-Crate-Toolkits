@@ -1,18 +1,20 @@
 import argparse
 import json
 import logging
-
 import requests
+import shutil
 import yaml
+
 from botocore.exceptions import BotoCoreError, ClientError
 from pathlib import Path
+from zipfile import BadZipFile
 from five_safes_tes_workbench.common.exceptions.base import WorkbenchError
 from five_safes_tes_workbench.workbench import Workbench
 from fivesafe_crate_py import FiveSafesCrate
 
 from toolkits.config.exit_codes import ExitCode, exit_codes_epilog
 from toolkits.config.logging import configure_logging
-from toolkits.services.rocrate_service import create_tes_result_crate, get_tes_task_id
+from toolkits.services.rocrate_service import create_tes_result_crate, get_tes_task_id, is_valid_output_rocrate_path, write_crate
 
 def parse_args(argv=None):
     """Parse command-line arguments for the CLI tool."""
@@ -77,12 +79,16 @@ def main(argv=None):
     logger = logging.getLogger(__name__)
 
     try:
-        crate = FiveSafesCrate(args.input_path, version="1.0-DRAFT")
+        input_crate = FiveSafesCrate(args.input_path, version="1.0-DRAFT")
         logger.info("RO-Crate loaded")
-        task_id = get_tes_task_id(crate)
+        task_id = get_tes_task_id(input_crate)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         logger.error(exc)
         return ExitCode.INPUT_ERROR
+
+    if not is_valid_output_rocrate_path(Path(args.input_path), args.output_rocrate):
+        logger.error("The output path cannot be nested in the input path")
+        return ExitCode.OUTPUT_ERROR
 
     wb = Workbench()
     try:
@@ -120,9 +126,9 @@ def main(argv=None):
         return ExitCode.NO_RESULTS
 
     try:
-        crate = create_tes_result_crate(crate, paths_dict, args.output_rocrate)
-        crate.write(args.output_rocrate)
-    except (OSError, ValueError) as exc:
+        crate = create_tes_result_crate(input_crate, paths_dict, args.output_rocrate)
+        write_crate(crate, Path(args.input_path), args.output_rocrate)
+    except (OSError, shutil.Error, ValueError, BadZipFile) as exc:
         logger.error(f"RO-Crate {args.output_rocrate.name} could not be saved to {args.output_rocrate.parent}: {exc}")
         return ExitCode.OUTPUT_ERROR
 
