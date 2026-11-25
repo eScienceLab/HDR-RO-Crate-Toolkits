@@ -1,7 +1,6 @@
 import json
 import logging
 import shutil
-import tempfile
 import uuid
 
 from pathlib import Path
@@ -257,42 +256,21 @@ def create_tes_result_crate(input_crate: FiveSafesCrate, paths_dict: dict, roc_o
 def write_crate(crate: FiveSafesCrate, input_path: Path, output_rocrate: Path) -> bool:
     """Copy RO-Crate payload files from a directory or ZIP archive, and write metadata."""
 
-    try:
-        temp_dir = Path(tempfile.mkdtemp(dir=output_rocrate.parent, prefix=f".{output_rocrate.name}_tmp_"))
-        backup_dir = Path(tempfile.mkdtemp(dir=output_rocrate.parent, prefix=f".{output_rocrate.name}_bak_"))
+    # TODO: Replace this function with safe saving from `5s-crate-py` when it exists.
 
-        if input_path.is_dir():
-            shutil.copytree(input_path, temp_dir, dirs_exist_ok=True)
-        elif is_zipfile(input_path):
-            with ZipFile(input_path, "r") as zip_file:
-                zip_file.extractall(temp_dir)
-        else:
-            shutil.copytree(input_path.parent, temp_dir, dirs_exist_ok=True)
-        crate.write(str(temp_dir))
+    # Copy RO-Crate payload files to the output path
+    if input_path.is_dir():
+        shutil.copytree(input_path, output_rocrate, dirs_exist_ok=True)
+    elif is_zipfile(input_path):
+        with ZipFile(input_path, "r") as zip_file:
+            zip_file.extractall(output_rocrate)
+    else:
+        shutil.copytree(input_path.parent, output_rocrate, dirs_exist_ok=True)
 
-        if output_rocrate.exists():
-            output_rocrate.rename(backup_dir)
+    # Write crate to output path
+    crate.write(str(output_rocrate))
 
-        temp_dir.rename(output_rocrate)
-        temp_dir = None
-
-        if backup_dir:
-            try:
-                shutil.rmtree(backup_dir)
-                backup_dir = None
-            except OSError as exc:
-                logger.warning(
-                    f"RO-Crate backup could not be removed at {backup_dir}: {exc}"
-                )
-
-        return True
-    except (OSError, shutil.Error, ValueError, BadZipFile):
-        if backup_dir:
-            if output_rocrate.exists():
-                shutil.rmtree(output_rocrate)
-            backup_dir.rename(output_rocrate)
-            backup_dir = None
-        raise
+    return True
 
 
 def resolve_metadata_path(input_path):
