@@ -45,7 +45,7 @@ Setup complete. Next:
   1. Fill in client_secret in 5s-tes-wb-config.yaml (see docs/fortress.md, step 6).
   2. From $REPO_ROOT, submit:
      .venv/bin/rocrate-tes-submit tests/data/fortress-5s-tes-pre-submission \\
-         --config_path 5s-tes-wb-config.yaml --disable_roc_validator
+         --config_path 5s-tes-wb-config.yaml
   3. After egress is approved, fetch the results:
      .venv/bin/rocrate-tes-fetch tes-submission-ro-crate --config_path 5s-tes-wb-config.yaml
 MSG
